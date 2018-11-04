@@ -1,6 +1,0 @@
-H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\bin\Debug\CommonTypes.dll
-H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\bin\Debug\CommonTypes.pdb
-H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.csprojAssemblyReference.cache
-H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.csproj.CoreCompileInputs.cache
-H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.dll
-H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.pdb
