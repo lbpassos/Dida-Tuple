@@ -4,3 +4,9 @@ H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTyp
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.csproj.CoreCompileInputs.cache
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.dll
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.pdb
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\CommonTypes\bin\Debug\CommonTypes.dll
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\CommonTypes\bin\Debug\CommonTypes.pdb
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.csprojAssemblyReference.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.csproj.CoreCompileInputs.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.dll
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\CommonTypes\obj\Debug\CommonTypes.pdb

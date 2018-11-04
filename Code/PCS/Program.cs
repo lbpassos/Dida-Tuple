@@ -21,15 +21,10 @@ namespace Projeto_DAD
        
         static void Main(string[] args)
         {
-            
-
-            
 
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);    
-
-            
-
+ 
             RemotingConfiguration.RegisterWellKnownServiceType(
                 typeof(MyRemoteObject),
                 "MyRemoteObjectName",
