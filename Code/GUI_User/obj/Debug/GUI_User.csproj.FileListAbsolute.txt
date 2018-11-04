@@ -1,0 +1,10 @@
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\bin\Debug\GUI_User.exe.config
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\bin\Debug\GUI_User.exe
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\bin\Debug\GUI_User.pdb
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.csprojResolveAssemblyReference.cache
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.Form1.resources
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.Properties.Resources.resources
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.csproj.GenerateResource.Cache
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.csproj.CoreCompileInputs.cache
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.exe
+C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.pdb
