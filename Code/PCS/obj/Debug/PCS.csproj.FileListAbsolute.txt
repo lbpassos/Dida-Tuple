@@ -8,3 +8,13 @@ H:\Windows\Documents\DAD\project\Dida-Tuple\Code\PCS\obj\Debug\PCS.csproj.CoreCo
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\PCS\obj\Debug\PCS.csproj.CopyComplete
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\PCS\obj\Debug\PCS.exe
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\PCS\obj\Debug\PCS.pdb
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\bin\Debug\PCS.exe.config
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\bin\Debug\PCS.exe
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\bin\Debug\PCS.pdb
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\bin\Debug\CommonTypes.dll
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\bin\Debug\CommonTypes.pdb
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\obj\Debug\PCS.csprojAssemblyReference.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\obj\Debug\PCS.csproj.CoreCompileInputs.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\obj\Debug\PCS.csproj.CopyComplete
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\obj\Debug\PCS.exe
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\PCS\obj\Debug\PCS.pdb

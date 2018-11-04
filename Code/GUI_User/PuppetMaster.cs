@@ -11,17 +11,28 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.IO;
+using System.Xml;
+using System.Net;
+using System.Net.Sockets;
 
 
 namespace Projeto_DAD
 {
     public partial class PuppetMaster : Form
     {
+        private Dictionary<string, MyRemoteObject> PCS_Url; //address PCS
+        private const int port = 100001;
 
+        private string typeOfExecution;
         private string filePath;
+
         private Dictionary<string, MyRemoteObject> PCS_Url; //address PCS
         private Dictionary<string, MyRemoteObject> PCS_ClientUrl; //address PCS
         private const string port = "1000";
+
+        private List<string> commandList = new List<string>();
+
+
 
         //private TcpChannel channel;
         //private MyRemoteObject obj;
@@ -41,26 +52,46 @@ namespace Projeto_DAD
                 filePath = openFileDialog1.FileName;
                 textBox_Browse.AppendText(filePath);
                 sr.Close();
+
+                //Scanner for XML file
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(filePath);
+                typeOfExecution = xmlDoc.DocumentElement.SelectSingleNode("type").InnerText;  //Verifica qual o tipo de execução que o PM vai fazer, Sequence ou Step by Step
+                foreach (XmlNode node in xmlDoc.DocumentElement.SelectNodes("command"))
+                {
+                    commandList.Add(node.InnerText); //Adiciona os comandos à lista de comandos
+                }
+
                 button_Send.Enabled = true;
             }
-            //Console.WriteLine("ola");
         }
 
         private void button_Send_Click(object sender, EventArgs e)
         {
-            textBox_Browse.Enabled = false;
-            
-            //Console.WriteLine("Estou no send");
-            string[] lines = File.ReadAllLines( filePath );
-            foreach (string line in lines)
+            if (typeOfExecution.Equals("Sequence"))
             {
-                checkLine(line);
+                textBox_Browse.Enabled = false;
+                foreach (string command in commandList)
+                {
+                    checkLine(command);
+                    Console.WriteLine(command);
+                }
             }
+            else if (typeOfExecution.Equals("Step"))
+            {
+                textBox_Browse.Enabled = false;
+                foreach (string command in commandList)
+                {
+                    checkLine(command);
+                    Console.WriteLine(command);
+                }
+            }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show("The type of execution is not acceptable, please choose between \"Sequence\" and \"Step\"");
+            }
+
         }
-
-    
-
-
 
         private void GUI_Client_Load(object sender, EventArgs e)
         {
@@ -130,7 +161,6 @@ namespace Projeto_DAD
                         {
                             Console.WriteLine("Invalid PCS_URL: {0}", e);
                         }
-
 
                     }
                     break;

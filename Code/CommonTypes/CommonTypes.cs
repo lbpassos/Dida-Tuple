@@ -18,8 +18,7 @@ namespace Projeto_DAD
         public void StartServer(string id, string min_delay, string max_delay)
         {
             Console.WriteLine("# StartServer:");
-
-
+            
             if (processes.ContainsKey(id))
             {
                 if (processes[id].HasExited) //If process is terminated
