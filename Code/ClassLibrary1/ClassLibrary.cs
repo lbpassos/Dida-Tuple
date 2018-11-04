@@ -37,4 +37,9 @@ namespace Projeto_DAD
     {
         //TODO
     }
+
+    public class Tuple
+    {
+
+    }
 }
