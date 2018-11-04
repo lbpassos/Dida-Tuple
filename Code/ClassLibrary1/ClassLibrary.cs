@@ -38,8 +38,31 @@ namespace Projeto_DAD
         //TODO
     }
 
+    public class TupleObject
+    {
+        private int a;
+        private string b;
+
+        public TupleObject(int a, string b)
+        {
+            this.a = a;
+            this.b = b;
+        }
+    }
+
     public class Tuple
     {
+        private string[] stringList;
+        private TupleObject[] objectsList;
 
+        public Tuple(string[] list)
+        {
+            this.stringList = list;
+        }
+
+        public Tuple(TupleObject[] list)
+        {
+            this.objectsList = list;
+        }
     }
 }
