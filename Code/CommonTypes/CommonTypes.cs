@@ -73,7 +73,7 @@ namespace Projeto_DAD
                 catch (Win32Exception) { Console.WriteLine("Couldn't Initialize the Client"); }
             }
             else
-                Console.WriteLine("\nThe pid specified already exists : {0}", pid);
+                Console.WriteLine("\nThe pid specified already exists : {0}", id);
         }
     }
 }

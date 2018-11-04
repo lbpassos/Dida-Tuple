@@ -17,7 +17,7 @@ namespace Projeto_DAD
 {
     class Program
     {
-        private const int port = 1000;
+        private const int port = 10000;
        
         static void Main(string[] args)
         {

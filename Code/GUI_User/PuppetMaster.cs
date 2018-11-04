@@ -21,14 +21,13 @@ namespace Projeto_DAD
     public partial class PuppetMaster : Form
     {
         private Dictionary<string, MyRemoteObject> PCS_Url; //address PCS
-        private const int port = 100001;
+        private const int port = 10000; //Port in the PCS
 
         private string typeOfExecution;
         private string filePath;
 
-        private Dictionary<string, MyRemoteObject> PCS_Url; //address PCS
         private Dictionary<string, MyRemoteObject> PCS_ClientUrl; //address PCS
-        private const string port = "1000";
+
 
         private List<string> commandList = new List<string>();
 
@@ -93,14 +92,19 @@ namespace Projeto_DAD
 
         }
 
+
         private void GUI_Client_Load(object sender, EventArgs e)
         {
 
         }
 
+
         private void button_Run_Click(object sender, EventArgs e)
         {
-            Console.WriteLine("RUN");
+            //Console.WriteLine("RUN");
+            //String command = textBox2.ge
+            
+
         }
 
         private void textBox2_TextChanged(object sender, EventArgs e)
@@ -117,9 +121,9 @@ namespace Projeto_DAD
                 return;
 
             string command = words[0];
-           
 
-            string url_toSend = "tcp://" + url + ":" + port + "/MyRemoteObjectName";
+
+            string url_toSend;
 
             MyRemoteObject ipcs;
      
@@ -130,11 +134,14 @@ namespace Projeto_DAD
                     string url = words[2];
                     string min_delay = words[3];
                     string max_delay = words[4];
+
+                    url_toSend = "tcp://" + url + ":" + port + "/MyRemoteObjectName";
+
                     if ( words.Length == 5 )
                     {
                         try
                         {
-                            //IPCS pcs = getOrConnectToPCS(pcs_url);
+                            //test URI
 
                             try
                             {
@@ -168,13 +175,14 @@ namespace Projeto_DAD
                     string client_id = words[1];
                     string url_client = words[2];
                     string scriptFile = words[3];
-                    
+
+                    url_toSend = "tcp://" + url_client + ":" + port + "/MyRemoteObjectName";
+
                     if (words.Length == 4)
                     {
                         try
                         {
-                            //IPCS pcs = getOrConnectToPCS(pcs_url);
-
+                            //testc URI
                             try
                             {
                                 ipcs = PCS_ClientUrl[client_id]; //if already registered start
