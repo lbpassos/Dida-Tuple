@@ -42,7 +42,11 @@ namespace Projeto_DAD
             }
         }// END
         //********************************************************************
+<<<<<<< HEAD
     } 
+=======
+    }
+>>>>>>> bea90cf6d8bcb7ba9e8184f5573b66bc116f6ade
 
     /*static void Main(string[] args)
     {
@@ -53,6 +57,15 @@ namespace Projeto_DAD
         RemotingServices.Marshal(new ClientServices(), "MCM", typeof(ClientServices));
     }
 }
+<<<<<<< HEAD
+
+
+class ClientServices: MarshalByRefObject, IClientServices
+{
+    //TODO
+}*/
+=======
+>>>>>>> bea90cf6d8bcb7ba9e8184f5573b66bc116f6ade
 
 
 class ClientServices: MarshalByRefObject, IClientServices

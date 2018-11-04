@@ -10,6 +10,7 @@ C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs
 C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\PuppetMaster.csproj.CoreCompileInputs.cache
 C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.exe
 C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\GUI_User\obj\Debug\GUI_User.pdb
+<<<<<<< HEAD
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.exe.config
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.exe
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.pdb
@@ -25,3 +26,18 @@ H:\Windows\Documents\DAD\project\Dida-Tuple\Code\GUI_User\obj\Debug\PuppetMaster
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\GUI_User\obj\Debug\PuppetMaster.csproj.CopyComplete
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\GUI_User\obj\Debug\GUI_User.exe
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\GUI_User\obj\Debug\GUI_User.pdb
+=======
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.exe.config
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.exe
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.pdb
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\ClassLibrary1.dll
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\ClassLibrary1.pdb
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\PuppetMaster.csprojAssemblyReference.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\Projeto_DAD.PuppetMaster.resources
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\GUI_User.Properties.Resources.resources
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\PuppetMaster.csproj.GenerateResource.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\PuppetMaster.csproj.CoreCompileInputs.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\PuppetMaster.csproj.CopyComplete
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\GUI_User.exe
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\GUI_User.pdb
+>>>>>>> bea90cf6d8bcb7ba9e8184f5573b66bc116f6ade

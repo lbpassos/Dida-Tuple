@@ -4,9 +4,18 @@ C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs
 C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\ClassLibrary1\obj\Debug\ClassLibrary.csproj.CoreCompileInputs.cache
 C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\ClassLibrary1\obj\Debug\ClassLibrary1.dll
 C:\Users\bruno\Desktop\Ambiente de Trabalho\Mestrado - IST\1A 1S\PADI - DAD\Labs\Projeto_DAD\ClassLibrary1\obj\Debug\ClassLibrary1.pdb
+<<<<<<< HEAD
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\ClassLibrary1\bin\Debug\ClassLibrary1.dll
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\ClassLibrary1\bin\Debug\ClassLibrary1.pdb
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\ClassLibrary1\obj\Debug\ClassLibrary.csprojAssemblyReference.cache
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\ClassLibrary1\obj\Debug\ClassLibrary.csproj.CoreCompileInputs.cache
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\ClassLibrary1\obj\Debug\ClassLibrary1.dll
 H:\Windows\Documents\DAD\project\Dida-Tuple\Code\ClassLibrary1\obj\Debug\ClassLibrary1.pdb
+=======
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\ClassLibrary1\bin\Debug\ClassLibrary1.dll
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\ClassLibrary1\bin\Debug\ClassLibrary1.pdb
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\ClassLibrary1\obj\Debug\ClassLibrary.csprojAssemblyReference.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\ClassLibrary1\obj\Debug\ClassLibrary.csproj.CoreCompileInputs.cache
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\ClassLibrary1\obj\Debug\ClassLibrary1.dll
+C:\Users\bruno\Source\Repos\Dida-Tuple\Code\ClassLibrary1\obj\Debug\ClassLibrary1.pdb
+>>>>>>> bea90cf6d8bcb7ba9e8184f5573b66bc116f6ade
