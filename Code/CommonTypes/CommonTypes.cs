@@ -13,8 +13,7 @@ namespace Projeto_DAD
 
         private Dictionary<string, Process> processes = new Dictionary<string, Process>();
         public const string serverPath = "..\\..\\..\\ConsoleApp1\\bin\\Debug\\ConsoleApp1.exe";
-        //private Dictionary<string, string> urlByPid = new Dictionary<string, string>();
-        //private Dictionary<string, ISlaveControl> slaveByPid = new Dictionary<string, ISlaveControl>();
+        public const string clientPath = "..\\..\\..\\ConsoleApp1\\bin\\Debug\\Client.exe";
 
         public void StartServer(string id, string min_delay, string max_delay)
         {
@@ -35,17 +34,47 @@ namespace Projeto_DAD
                 {
                     Process p = new Process();
                     p.StartInfo.FileName = serverPath;
-                    // endpoint msec numPlayers 
-                    //p.StartInfo.Arguments = server_url + " " + msec + " " + num_players;
+                    
                     p.Start();
                     processes.Add(id, p);
-                    //urlByPid.Add(id, url); slaveByPid.Add(pid, (ISlaveControl)Activator.GetObject(typeof(ISlaveControl), urlByPid[pid]));
+                    
                 }
                 catch (InvalidOperationException) { Console.WriteLine("FileName specified is not valid"); }
                 catch (Win32Exception e) { Console.WriteLine("Couldn't Initialize the Server"); Console.WriteLine(e); }
             }
             else
                 Console.WriteLine("\nThe pid specified already exists : {0}", id);
+        }
+
+
+
+        public void StartClient(string id, string msec, string script_filel)
+        {
+            Console.WriteLine("# StartClient:");
+            
+
+            if (processes.ContainsKey(id))
+                if (processes[id].HasExited)
+                {
+                    processes.Remove(id);
+                }
+            if (!processes.ContainsKey(id))
+            {
+                try
+                {
+                    Process p = new Process();
+                    p.StartInfo.FileName = clientPath;
+                    
+               
+                    p.Start();
+                    processes.Add(id, p);
+                    
+                }
+                catch (InvalidOperationException) { Console.WriteLine("FileName specified is not valid"); }
+                catch (Win32Exception) { Console.WriteLine("Couldn't Initialize the Client"); }
+            }
+            else
+                Console.WriteLine("\nThe pid specified already exists : {0}", pid);
         }
     }
 }

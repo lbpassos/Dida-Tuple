@@ -20,6 +20,7 @@ namespace Projeto_DAD
 
         private string filePath;
         private Dictionary<string, MyRemoteObject> PCS_Url; //address PCS
+        private Dictionary<string, MyRemoteObject> PCS_ClientUrl; //address PCS
         private const string port = "1000";
 
         //private TcpChannel channel;
@@ -29,6 +30,7 @@ namespace Projeto_DAD
         {
             InitializeComponent();
             PCS_Url = new Dictionary<string, MyRemoteObject>();
+            PCS_ClientUrl = new Dictionary<string, MyRemoteObject>();
         }
 
         private void button_Browse_Click(object sender, EventArgs e)
@@ -84,18 +86,19 @@ namespace Projeto_DAD
                 return;
 
             string command = words[0];
-            string server_id = words[1];
-            string url = words[2];
-            string min_delay = words[3];
-            string max_delay = words[4];
+           
 
             string url_toSend = "tcp://" + url + ":" + port + "/MyRemoteObjectName";
 
             MyRemoteObject ipcs;
-            //PCSService ola;
+     
             
                 switch (command) { //test command name
                 case "Server":  //Start Server
+                    string server_id = words[1];
+                    string url = words[2];
+                    string min_delay = words[3];
+                    string max_delay = words[4];
                     if ( words.Length == 5 )
                     {
                         try
@@ -108,7 +111,7 @@ namespace Projeto_DAD
                             }
                             catch (KeyNotFoundException e)
                             {
-                                //new Uri(url);
+                                
                                 Console.WriteLine("Connecting to {0}", url);
 
                                 TcpChannel channel = new TcpChannel();
@@ -117,12 +120,11 @@ namespace Projeto_DAD
                                 ipcs = (MyRemoteObject)Activator.GetObject(typeof(MyRemoteObject), url_toSend);
                                 //pcs.Print("Hello there :)");
                                 PCS_Url.Add(url, ipcs);
-                                //return pcs;
+                                
                             }
 
                             ipcs.StartServer(server_id, min_delay, max_delay);
-                            //knownServers.Add(server_url);
-                            //pcsByPID[pid] = pcs;
+                           
                         }
                         catch (UriFormatException e)
                         {
@@ -132,6 +134,45 @@ namespace Projeto_DAD
 
                     }
                     break;
+                case "Client":  //Start Server
+                    string client_id = words[1];
+                    string url_client = words[2];
+                    string scriptFile = words[3];
+                    
+                    if (words.Length == 4)
+                    {
+                        try
+                        {
+                            //IPCS pcs = getOrConnectToPCS(pcs_url);
+
+                            try
+                            {
+                                ipcs = PCS_ClientUrl[client_id]; //if already registered start
+                            }
+                            catch (KeyNotFoundException e)
+                            {
+
+                                Console.WriteLine("Connecting to {0}", url_client);
+
+                                TcpChannel channel = new TcpChannel();
+                                ChannelServices.RegisterChannel(channel, true);
+
+                                ipcs = (MyRemoteObject)Activator.GetObject(typeof(MyRemoteObject), url_toSend);
+                                //pcs.Print("Hello there :)");
+                                PCS_ClientUrl.Add(url_client, ipcs);
+
+                            }
+
+                            ipcs.StartClient(client_id, url_client, scriptFile);
+
+                        }
+                        catch (UriFormatException e)
+                        {
+                            Console.WriteLine("Invalid PCS_URL: {0}", e);
+                        }
+                    }
+                    break;
+                
                 default:
                     Console.WriteLine("Invalid Command");
                     break;
