@@ -44,16 +44,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="PCS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CommonTypes\CommonTypes.csproj">
-      <Project>{985d9cff-7a7a-4faa-b20b-69af84587183}</Project>
-      <Name>CommonTypes</Name>
+    <ProjectReference Include="..\ClassLibrary1\ClassLibrary.csproj">
+      <Project>{53bb0e48-127c-4e8d-add7-21cbd0c1479e}</Project>
+      <Name>ClassLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

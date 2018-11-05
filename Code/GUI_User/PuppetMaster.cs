@@ -102,8 +102,8 @@ namespace Projeto_DAD
         private void button_Run_Click(object sender, EventArgs e)
         {
             //Console.WriteLine("RUN");
-            //String command = textBox2.ge
-            
+            string command = textBox2.Text;
+            checkLine(command);
 
         }
 
@@ -141,7 +141,7 @@ namespace Projeto_DAD
                     {
                         try
                         {
-                            //test URI
+                            //test URL
 
                             try
                             {
@@ -152,7 +152,7 @@ namespace Projeto_DAD
                                 
                                 Console.WriteLine("Connecting to {0}", url);
 
-                                TcpChannel channel = new TcpChannel();
+                                TcpChannel channel = new TcpChannel(new Random().Next(8000, 9000));
                                 ChannelServices.RegisterChannel(channel, true);
 
                                 ipcs = (MyRemoteObject)Activator.GetObject(typeof(MyRemoteObject), url_toSend);
@@ -171,7 +171,7 @@ namespace Projeto_DAD
 
                     }
                     break;
-                case "Client":  //Start Server
+                case "Client":  //Start Client
                     string client_id = words[1];
                     string url_client = words[2];
                     string scriptFile = words[3];
@@ -185,15 +185,15 @@ namespace Projeto_DAD
                             //testc URI
                             try
                             {
-                                ipcs = PCS_ClientUrl[client_id]; //if already registered start
+                                ipcs = PCS_ClientUrl[client_id]; //if already registered, start
                             }
                             catch (KeyNotFoundException e)
                             {
 
                                 Console.WriteLine("Connecting to {0}", url_client);
 
-                                TcpChannel channel = new TcpChannel();
-                                ChannelServices.RegisterChannel(channel, true);
+                                TcpChannel channel = new TcpChannel(new Random().Next(7000, 8000));
+                                //ChannelServices.RegisterChannel(channel, true);
 
                                 ipcs = (MyRemoteObject)Activator.GetObject(typeof(MyRemoteObject), url_toSend);
                                 //pcs.Print("Hello there :)");

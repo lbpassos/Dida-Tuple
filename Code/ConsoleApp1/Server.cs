@@ -26,7 +26,7 @@ namespace Projeto_DAD
         {
             Console.WriteLine("Starting echo server...");
 
-            int port = 1234;
+            int port = new Random().Next(1000,9000);
             TcpListener listener = new TcpListener(IPAddress.Loopback, port);
             listener.Start();
 

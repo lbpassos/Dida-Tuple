@@ -13,7 +13,7 @@ namespace Projeto_DAD
 
         private Dictionary<string, Process> processes = new Dictionary<string, Process>();
         public const string serverPath = "..\\..\\..\\ConsoleApp1\\bin\\Debug\\ConsoleApp1.exe";
-        public const string clientPath = "..\\..\\..\\ConsoleApp1\\bin\\Debug\\Client.exe";
+        public const string clientPath = "..\\..\\..\\Client\\bin\\Debug\\Client.exe";
 
         public void StartServer(string id, string min_delay, string max_delay)
         {

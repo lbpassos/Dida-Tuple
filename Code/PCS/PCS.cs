@@ -15,7 +15,7 @@ using System.Collections;
 
 namespace Projeto_DAD
 {
-    class Program
+    class PCS
     {
         private const int port = 10000;
        

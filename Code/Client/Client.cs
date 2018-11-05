@@ -25,7 +25,7 @@ namespace Projeto_DAD
         {
             Console.WriteLine("Starting echo client...");
 
-            int port = 1234;
+            int port = new Random().Next(1000,9000);
             TcpClient client = new TcpClient("localhost", port);
             NetworkStream stream = client.GetStream();
             StreamReader reader = new StreamReader(stream);

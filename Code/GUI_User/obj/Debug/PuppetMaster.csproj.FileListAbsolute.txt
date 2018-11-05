@@ -29,9 +29,7 @@ C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.exe.conf
 C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.exe
 C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\GUI_User.pdb
 C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\ClassLibrary1.dll
-C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\CommonTypes.dll
 C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\ClassLibrary1.pdb
-C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\bin\Debug\CommonTypes.pdb
 C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\PuppetMaster.csprojAssemblyReference.cache
 C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\Projeto_DAD.PuppetMaster.resources
 C:\Users\bruno\Source\Repos\Dida-Tuple\Code\GUI_User\obj\Debug\GUI_User.Properties.Resources.resources
