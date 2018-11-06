@@ -9,6 +9,7 @@ using System.IO;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
+using System.Threading;
 
 namespace Server
 {
@@ -16,10 +17,12 @@ namespace Server
     {
         //Dummy Server - Echo for testing
         //********************************************************************
-        static int id;
-        static Uri uri;
-        static int min_delay;
-        static int max_delay;
+        public static int id;
+        public static Uri uri;
+        public static int min_delay;
+        public static int max_delay;
+
+        private static TcpChannel channel;
 
         static void Main(string[] args)
         {
@@ -48,7 +51,7 @@ namespace Server
             max_delay = Int32.Parse(args[3]);
 
 
-            TcpChannel channel = new TcpChannel( uri.Port);
+            /*TcpChannel channel = new TcpChannel( uri.Port);
             ChannelServices.RegisterChannel(channel, true);
 
 
@@ -56,6 +59,14 @@ namespace Server
                 typeof(ServerService),
                 "MyRemoteObjectName",
                 WellKnownObjectMode.Singleton);
+                */
+
+            //new Thread(Server_thread).Start();
+            channel = new TcpChannel(uri.Port);
+            ChannelServices.RegisterChannel(channel, true);
+
+            new Thread(() => Server_thread()).Start();
+            new Thread(() => Client_thread()).Start();
 
             System.Console.WriteLine("<enter> para sair...");
             System.Console.ReadLine();
@@ -82,5 +93,31 @@ namespace Server
             }*/ 
         }// END
          //********************************************************************
+         public static void Server_thread()
+        {
+            //TcpChannel channel = new TcpChannel(uri.Port);
+            //ChannelServices.RegisterChannel(channel, true);
+
+
+            RemotingConfiguration.RegisterWellKnownServiceType(
+                typeof(ServerService),
+                "MyRemoteObjectName",
+                WellKnownObjectMode.Singleton);
+
+            while (true) ;
+
+        }
+
+        public static void Client_thread()
+        {
+
+            new ServerProgram(Server.uri, Server.id);
+
+                        
+
+            while (true) ;
+
+        }
+
     }
 }
