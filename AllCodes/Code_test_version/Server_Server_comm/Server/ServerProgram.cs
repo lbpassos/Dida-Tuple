@@ -42,7 +42,7 @@ namespace Server
 
         private void NetworkStatusLoop()
         {
-            while (STATE_MACHINE_NETWORK!= STATE_MACHINE_NETWORK_END)
+            while (STATE_MACHINE_NETWORK != STATE_MACHINE_NETWORK_END)
             {
                 NetworkStatusStateMachine();
                 Thread.Sleep(1000);

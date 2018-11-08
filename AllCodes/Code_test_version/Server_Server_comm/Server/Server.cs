@@ -61,8 +61,8 @@ namespace Server
             if (args.Length != 4)
             {
                 Console.WriteLine("Insuficient arguments: SERVER_ID URL MIN_DELAY MAX_DELAY");
-                Console.ReadLine();
-                return;
+                args = Console.ReadLine().Split(' ');
+                
             }
 
             id = Int32.Parse(args[0]);
