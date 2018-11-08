@@ -65,7 +65,40 @@ namespace Projeto_DAD
             while (true)
             {
                 Console.WriteLine("Command: ");
-                Console.ReadLine();
+                string command = Console.ReadLine();
+                string[] words = command.Split(' ');
+                if (words[0] == "add")
+                {
+                    string[] funcao = words[1].Split('(');
+                    funcao[0] = funcao[0].Substring(1);
+                    if (funcao[0] == "DADTestA")
+                    {
+                        funcao[1] = funcao[1].Trim(new Char[] { '<', '>', '\"', '\"', '(', ')' });
+                        string[] variaveis = funcao[1].Split(',');
+                        variaveis[1] = variaveis[1].Substring(1);
+                        //Console.WriteLine("DADTestA - " + variaveis[0] + " - " + variaveis[1]);
+                        //ss.Add(Int32.Parse(variaveis[0]), variaveis[1]);
+                    }
+                    else if (funcao[0] == "DADTestB")
+                    {
+                        funcao[1] = funcao[1].Trim(new Char[] { '<', '>', '\"', '\"', '(', ')' });
+                        string[] variaveis = funcao[1].Split(',');
+                        variaveis[1] = variaveis[1].Substring(1);
+                        variaveis[1] = variaveis[1].Remove(variaveis[1].Length - 1);
+                        //Console.WriteLine("DADTestB - " + variaveis[0] + " - " + variaveis[1] + " - " + variaveis[2]);
+                        //ss.Add(Int32.Parse(variaveis[0]), variaveis[1], Int32.Parse(variaveis[2]));
+                    }
+                    else if (funcao[0] == "DADTestC")
+                    {
+                        funcao[1] = funcao[1].Trim(new Char[] { '<', '>', '\"', '\"', '(', ')' });
+                        string[] variaveis = funcao[1].Split(',');
+                        variaveis[1] = variaveis[1].Substring(1);
+                        variaveis[1] = variaveis[1].Remove(variaveis[1].Length - 1);
+                        variaveis[2] = variaveis[2].Substring(1);
+                        //Console.WriteLine("DADTestC - " + variaveis[0] + " - " + variaveis[1] + " - " + variaveis[2]);
+                        //ss.Add(Int32.Parse(variaveis[0]), variaveis[1], variaveis[2]));
+                    }
+                }
             }
         }
     }

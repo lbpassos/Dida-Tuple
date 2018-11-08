@@ -10,7 +10,11 @@ namespace Projeto_DAD
 {
     public interface IServerServices
     {
-        void Add(Tuple<int, string> tuple); //Adds a tuple to the tuple space
+        void Add(int i1, string s1); //Adds a DADTestA
+
+        void Add(int i1, string s1, int i2);    //Adds a DADTestB
+
+        void Add(int i1, string s1, string s2);    //Adds a DADTestC
 
         Tuple<int, string> Read(Predicate<Tuple<int, string>> tuple);  //Reads a tuple from the tuple space which matches the schema.
 
@@ -79,8 +83,6 @@ namespace Projeto_DAD
             else
                 Console.WriteLine("\nThe pid specified already exists : {0}", id);
         }
-
-
 
         public void StartClient(string id, string msec, string script_filel)
         {
