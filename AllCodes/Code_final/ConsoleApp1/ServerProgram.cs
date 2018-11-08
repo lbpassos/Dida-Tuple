@@ -70,7 +70,7 @@ namespace Projeto_DAD
                         {
 
                             ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
-                            //Console.WriteLine("CHECK: {0}", Server.AllServers[i].UID.AbsoluteUri);
+                            Console.WriteLine("CHECK: {0}", Server.AllServers[i].UID.AbsoluteUri);
 
                             if (obj.isRoot() == true)
                             {

@@ -16,13 +16,13 @@ namespace Projeto_DAD
 
         void Add(int i1, string s1, string s2);    //Adds a DADTestC
 
-        Tuple<int, string> Read(Predicate<Tuple<int, string>> tuple);  //Reads a tuple from the tuple space which matches the schema.
+        Tuple<int, string> Read(Predicate<Tuple<int, string>> tuple);  //???????????
 
-        Tuple<int, string> Take(Predicate<Tuple<int, string>> tuple); // Removes a tuple from the tuple space which matches the schema.
+        Tuple<int, string> Take(Predicate<Tuple<int, string>> tuple); // ??????????????????
 
         void Wait(int milliseconds); //Delays the execution of the next command for x milliseconds.
 
-        void Begin_Repeat(int repetitions); //Repeats x number of times the commands following this command and before the next end-repeat.It is not possible to have another begin-repeat command before this loop is closed by a end-repeat command.
+        void Begin_Repeat(int repetitions, string command); //Repeats x number of times the commands following this command and before the next end-repeat.It is not possible to have another begin-repeat command before this loop is closed by a end-repeat command.
 
         void End_repeat(); //Closes a repeat loop.
 
@@ -113,82 +113,6 @@ namespace Projeto_DAD
                 Console.WriteLine("\nThe pid specified already exists : {0}", id);
         }
     }
-
-    public class DADTestA
-    {
-        public int i1;
-        public string s1;
-
-        public DADTestA(int pi1, string ps1)
-        {
-            i1 = pi1;
-            s1 = ps1;
-        }
-        public bool Equals(DADTestA o)
-        {
-            if (o == null)
-            {
-                return false;
-            }
-            else
-            {
-                return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)));
-            }
-        }
-    }
-
-    public class DADTestB
-    {
-        public int i1;
-        public string s1;
-        public int i2;
-
-        public DADTestB(int pi1, string ps1, int pi2)
-        {
-            i1 = pi1;
-            s1 = ps1;
-            i2 = pi2;
-        }
-
-        public bool Equals(DADTestB o)
-        {
-            if (o == null)
-            {
-                return false;
-            }
-            else
-            {
-                return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)) && (this.i2 == o.i2));
-            }
-        }
-    }
-
-    public class DADTestC
-    {
-        public int i1;
-        public string s1;
-        public string s2;
-
-        public DADTestC(int pi1, string ps1, string ps2)
-        {
-            i1 = pi1;
-            s1 = ps1;
-            s2 = ps2;
-        }
-
-        public bool Equals(DADTestC o)
-        {
-            if (o == null)
-            {
-                return false;
-            }
-            else
-            {
-                return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)) && (this.s2.Equals(o.s2)));
-            }
-        }
-    }
-
 
 
 }
