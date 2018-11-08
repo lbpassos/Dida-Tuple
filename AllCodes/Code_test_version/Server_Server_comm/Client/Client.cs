@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Common_types;
 using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 
-namespace Projeto_DAD
+namespace Client
 {
     class Client
     {
@@ -38,7 +39,7 @@ namespace Projeto_DAD
             }
 
             //Tentar ligar-se a todos os servidores
-            foreach (string servidor in AllServers)
+            foreach(string servidor in AllServers)
             {
                 try
                 {
@@ -52,7 +53,7 @@ namespace Projeto_DAD
                     //    RootServer = servidor;
                     //    Console.WriteLine(RootServer + " is the ROOT Server");
                     //    Console.WriteLine("Connected to :" + servidor);
-                    break;
+                        break;
                     //}
 
                 }
@@ -64,7 +65,7 @@ namespace Projeto_DAD
             }
             while (true)
             {
-                Console.WriteLine("Command: ");
+                Console.Write("Command: ");
                 Console.ReadLine();
             }
         }

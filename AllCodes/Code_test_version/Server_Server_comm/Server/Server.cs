@@ -41,8 +41,6 @@ namespace Server
 
     class Server
     {
-        //Dummy Server - Echo for testing
-        //********************************************************************
         
 
         public static List<EachServer> AllServers;    //All servers present in the pool
@@ -106,36 +104,15 @@ namespace Server
             }
 
             channel = new TcpChannel(uri.Port);
-            ChannelServices.RegisterChannel(channel, true);
+            ChannelServices.RegisterChannel(channel, false);
 
             new Thread(() => Server_thread()).Start();
             new Thread(() => Client_thread()).Start();
 
-            System.Console.WriteLine("<enter> para sair...");
+            System.Console.WriteLine("I'm server: " + args[1]);
             System.Console.ReadLine();
+        }
 
-
-
-
-
-
-
-            
-
-            //Console.WriteLine("Server ON in port " + port);
-            /*while (true)
-            {
-                string inputLine = "";
-                while (inputLine != null)
-                {
-                    inputLine = reader.ReadLine();
-                    writer.WriteLine(inputLine);
-                    Console.WriteLine(inputLine);
-                }
-                Console.WriteLine("Server saw disconnect from client.");
-            }*/ 
-        }// END
-         //********************************************************************
          public static void Server_thread()
         {
             //TcpChannel channel = new TcpChannel(uri.Port);
@@ -155,8 +132,6 @@ namespace Server
         {
 
             new ServerProgram();
-
-                        
 
             while (true) ;
 

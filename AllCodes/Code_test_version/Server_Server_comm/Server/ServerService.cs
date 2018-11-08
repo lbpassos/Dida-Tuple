@@ -7,8 +7,10 @@ using Common_types;
 
 namespace Server
 {
-    class ServerService : MarshalByRefObject, IServerToServer
+    class ServerService : MarshalByRefObject, IServerServices
     {
+
+        public static List<string> lista = new List<string>();
 
         private static bool Root = false;
 
@@ -16,6 +18,7 @@ namespace Server
         {
             Root = value;
         }
+
 
         //Implement Interface IServerToServer
         public void Ping()
@@ -27,5 +30,6 @@ namespace Server
             return Root;
         }
         
+
     }
 }

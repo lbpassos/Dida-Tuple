@@ -23,6 +23,10 @@ namespace Projeto_DAD
         void End_repeat(); //Closes a repeat loop.
 
         //To Finish?
+
+        bool isRoot(); //check if node is root
+        void Ping();
+
     }
 
     public interface IClientServices

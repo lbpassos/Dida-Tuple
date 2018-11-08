@@ -8,9 +8,9 @@ using System.Threading;
 using System.Collections;
 
 
-namespace Server
+namespace Projeto_DAD
 {
-   
+
 
     class ServerProgram
     {
@@ -31,7 +31,7 @@ namespace Server
         {
 
             STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_START;
-            serversAlive = new ArrayList( Server.AllServers.Count );
+            serversAlive = new ArrayList(Server.AllServers.Count);
             Root_id = 0;
             rand = new Random();
 
@@ -72,7 +72,7 @@ namespace Server
                             ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
                             //Console.WriteLine("CHECK: {0}", Server.AllServers[i].UID.AbsoluteUri);
 
-                            if ( obj.isRoot()==true )
+                            if (obj.isRoot() == true)
                             {
                                 Root_id = i; //ID of the current root node
                                 STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_KEEP_ALIVE;
@@ -108,13 +108,13 @@ namespace Server
                         else
                         {
                             //Console.WriteLine("MY_IDENTIFICATION: {0}, {1}", Server.My_Identification.ID, (int)serversAlive[0]);
-                            if ( (Server.My_Identification.ID-1) < (int)serversAlive[0] ) 
+                            if ((Server.My_Identification.ID - 1) < (int)serversAlive[0])
                             {
                                 //ROOT
                                 ServerService.setRoot(true);
                                 STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_IM_ROOT;
                             }
-                                
+
                         }
                     }
                     break;
@@ -163,22 +163,22 @@ namespace Server
 
         private void PingAllServers()
         {
-            
-            if(Server.AllServers.Count <= 1)
+
+            if (Server.AllServers.Count <= 1)
             {
                 return;
             }
 
             for (int i = 0; i < Server.AllServers.Count; i++)
             {
-                if( Server.AllServers[i].ID == Server.My_Identification.ID) //Avoid ping to himself
+                if (Server.AllServers[i].ID == Server.My_Identification.ID) //Avoid ping to himself
                 {
                     continue;
                 }
 
                 try
                 {
-                    
+
                     ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
                     obj.Ping();
                     Console.WriteLine("ALIVE: {0}", Server.AllServers[i].UID.AbsoluteUri);
@@ -190,7 +190,7 @@ namespace Server
                     //Console.WriteLine(e);
                 }
             }
-            
+
         }
     }
 }
