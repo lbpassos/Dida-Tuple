@@ -9,10 +9,11 @@ namespace Common_types
     // Server service to other servers
     public interface IServerToServer
     {
-        
-        void Ping();
 
-        //Other methods
+        bool isRoot(); //check if node is root
+        void Ping();
+        
+
         
     }
 

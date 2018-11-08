@@ -1,5 +1,8 @@
 # Log
 
+- **8-11**
+  - Root Server election done.
+  
 - **6-11**
   - Ping done. Every server can detect the status of all the servers in the farm
   

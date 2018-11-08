@@ -10,20 +10,22 @@ namespace Server
     class ServerService : MarshalByRefObject, IServerToServer
     {
 
-        /*ServerProgram server;
+        private static bool Root = false;
 
-        public ServerService()
+        public static void setRoot(bool value)
         {
-            server = new ServerProgram(Server.uri, Server.id);
+            Root = value;
         }
-        */
 
+        //Implement Interface IServerToServer
         public void Ping()
         {
             return;
+        }        
+        public bool isRoot()
+        {
+            return Root;
         }
-
-
-
+        
     }
 }

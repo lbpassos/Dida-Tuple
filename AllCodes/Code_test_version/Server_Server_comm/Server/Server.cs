@@ -13,20 +13,50 @@ using System.Threading;
 
 namespace Server
 {
+
+    public class EachServer
+    {
+        private Uri uid;  //address
+        private int id;   //process id given in configuration file (must be unique)
+
+        public EachServer(Uri address, int server_id)
+        {
+            uid = address;
+            id = server_id;
+        }
+
+        public Uri UID
+        {
+            get { return uid; }
+            set { uid = value; }
+        }
+
+        public int ID
+        {
+            get { return id; }
+            set { id = value; }
+        }
+    }
+
+
     class Server
     {
         //Dummy Server - Echo for testing
         //********************************************************************
-        public static int id;
-        public static Uri uri;
-        public static int min_delay;
-        public static int max_delay;
+        
+
+        public static List<EachServer> AllServers;    //All servers present in the pool
+        public static EachServer My_Identification;   //Current Server
+        private const string path = "..\\..\\..\\Filedatabase\\database.txt"; //database of all servers
 
         private static TcpChannel channel;
 
         static void Main(string[] args)
         {
-           
+            int id;
+            Uri uri;
+            int min_delay;
+            int max_delay;
 
             if (args.Length != 4)
             {
@@ -50,18 +80,31 @@ namespace Server
             min_delay = Int32.Parse(args[2]);
             max_delay = Int32.Parse(args[3]);
 
+            
+            //open file with database of all Servers in the system
+            AllServers = new List<EachServer>();
+            My_Identification = new EachServer(uri, id);
 
-            /*TcpChannel channel = new TcpChannel( uri.Port);
-            ChannelServices.RegisterChannel(channel, true);
+            string[] lines = File.ReadAllLines(path);
+            foreach (string line in lines)
+            {
+                string[] words = line.Split(' ');
 
+                int tmp_id = Int32.Parse(words[0]);
+                Uri uri_tmp;
+                try
+                {
+                    uri_tmp = new Uri(words[1]);
+                    AllServers.Add(new EachServer(uri_tmp, tmp_id));
+                }
+                catch (UriFormatException e)
+                {
+                    Console.WriteLine("Invalid URL: {0}", words[1]);
+                    //Console.ReadLine();
+                    return;
+                }
+            }
 
-            RemotingConfiguration.RegisterWellKnownServiceType(
-                typeof(ServerService),
-                "MyRemoteObjectName",
-                WellKnownObjectMode.Singleton);
-                */
-
-            //new Thread(Server_thread).Start();
             channel = new TcpChannel(uri.Port);
             ChannelServices.RegisterChannel(channel, true);
 
@@ -111,7 +154,7 @@ namespace Server
         public static void Client_thread()
         {
 
-            new ServerProgram(Server.uri, Server.id);
+            new ServerProgram();
 
                         
 
