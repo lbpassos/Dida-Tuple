@@ -10,8 +10,6 @@ using System.Collections;
 
 namespace Projeto_DAD
 {
-
-
     class ServerProgram
     {
 
@@ -45,7 +43,7 @@ namespace Projeto_DAD
             while (STATE_MACHINE_NETWORK != STATE_MACHINE_NETWORK_END)
             {
                 NetworkStatusStateMachine();
-                Thread.Sleep(1000);
+                //Thread.Sleep(1000);
             }
         }
 
@@ -65,25 +63,23 @@ namespace Projeto_DAD
                         {
                             continue;
                         }
-
                         try
                         {
-
                             ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
-                            Console.WriteLine("CHECK: {0}", Server.AllServers[i].UID.AbsoluteUri);
+                            //Console.WriteLine("CHECK: {0}", Server.AllServers[i].UID.AbsoluteUri);
 
                             if (obj.isRoot() == true)
                             {
                                 Root_id = i; //ID of the current root node
                                 STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_KEEP_ALIVE;
                                 flag = true;
-                                Console.WriteLine("ROOT is {0}", Server.AllServers[i].UID.AbsoluteUri);
+                                //Console.WriteLine("ROOT is {0}", Server.AllServers[i].UID.AbsoluteUri);
                                 break;
                             }
                             else
                             {
                                 serversAlive.Add(i); //Server ID
-                                Console.WriteLine("ALIVE: {0}", Server.AllServers[i].UID.AbsoluteUri);
+                                //Console.WriteLine("ALIVE: {0}", Server.AllServers[i].UID.AbsoluteUri);
 
                             }
                         }

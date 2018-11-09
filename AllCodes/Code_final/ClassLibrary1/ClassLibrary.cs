@@ -10,32 +10,32 @@ namespace Projeto_DAD
 {
     public interface IServerServices
     {
-        void Add(int i1, string s1); //Adds a DADTestA
+        void Add(string key, int i1, string s1); //Adds a DADTestA
 
-        void Add(int i1, string s1, int i2);    //Adds a DADTestB
+        void Add(string key, int i1, string s1, int i2);    //Adds a DADTestB
 
-        void Add(int i1, string s1, string s2);    //Adds a DADTestC
+        void Add(string key, int i1, string s1, string s2);    //Adds a DADTestC
 
-        Tuple<int, string> Read(Predicate<Tuple<int, string>> tuple);  //???????????
+        void Read(string key);
 
         Tuple<int, string> Take(Predicate<Tuple<int, string>> tuple); // ??????????????????
 
+        bool isRoot(); //check if node is root
+        void Ping();
+
+        void ShowA();
+
+    }
+
+
+
+    public interface IClientServices
+    {
         void Wait(int milliseconds); //Delays the execution of the next command for x milliseconds.
 
         void Begin_Repeat(int repetitions, string command); //Repeats x number of times the commands following this command and before the next end-repeat.It is not possible to have another begin-repeat command before this loop is closed by a end-repeat command.
 
         void End_repeat(); //Closes a repeat loop.
-
-        //To Finish?
-
-        bool isRoot(); //check if node is root
-        void Ping();
-
-    }
-
-    public interface IClientServices
-    {
-        //TODO
     }
 
     public interface IPuppetMasterServices

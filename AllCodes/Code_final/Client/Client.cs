@@ -44,16 +44,21 @@ namespace Projeto_DAD
             {
                 try
                 {
-                    Console.WriteLine("Trying to connect to: " + servidor + "MyRemoteObject");
+                    Console.WriteLine("Trying to connect to: " + servidor);
                     ss = (IServerServices)Activator.GetObject(typeof(IServerServices), servidor + "MyRemoteObjectName");
-                    RemotingServices.Marshal(new ClientServices(), "MyRemoteObjectName", typeof(ClientServices));
                     
                     if (ss.isRoot() == true)
                     {
+                        Console.WriteLine("Connected to :" + servidor);
                         RootServer = servidor;
                         Console.WriteLine(RootServer + " is the ROOT Server");
-                        Console.WriteLine("Connected to :" + servidor);
+                        RemotingServices.Marshal(new ClientServices(), "MyRemoteObjectName", typeof(ClientServices));
                         break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Connected to :" + servidor);
+                        Console.WriteLine(servidor + "is NOT the ROOT Server");
                     }
 
                 }
@@ -66,83 +71,78 @@ namespace Projeto_DAD
 
             while (true)
             {
-                Console.WriteLine("Command: ");
+                Console.Write("Command: ");
                 string command = Console.ReadLine();
-                string[] results = CheckCommands(command).Split(' ');
+                string[] results;
+                try {
+                    results = CheckCommands(command).Split(' ');
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine("Wrong type of command!");
+                    continue;
+                }
                 if (results[0] == "add")
                 {
-                    if (results[1] == "DADTestA") ; //ss.Add(Int32.Parse(resultados[2]), resultados[3]);
-                    if (results[1] == "DADTestB") ; //ss.Add(Int32.Parse(resultados[2]), resultados[3], Int32.Parse(resultados[3]));
-                    if (results[1] == "DADTestC") ; //ss.Add(Int32.Parse(resultados[2]), resultados[3], resultados[2]));
+                    if (results[2] == "DADTestA") ss.Add(results[1] ,Int32.Parse(results[3]), results[4]);
+                    if (results[2] == "DADTestB") ss.Add(results[1], Int32.Parse(results[4]), results[4], Int32.Parse(results[5]));
+                    if (results[2] == "DADTestC") ss.Add(results[1], Int32.Parse(results[3]), results[4], results[5]);
                 }
                 else if (results[0] == "read")
                 {
-                    //TODO
+                    //Console.WriteLine(string.Join(" ", results));
+                    if (results[2] == "DADTestA") ss.Read(results[1]);
                 }
                 else if (results[0] == "take")
                 {
                     //TODO
                 }
-                else if (results[0] == "wait")
+                else if(results[0] == "ShowA")
                 {
-                    ss.Wait(Int32.Parse(results[1]));
-                }
-                else if (results[0] == "Begin-repeat")
-                {
-                    //TODO
-                }
-                else if (results[0] == "End-repeat")
-                {
-                    ss.End_repeat();
+                    ss.ShowA();
                 }
             }
         }
 
         public static string CheckCommands(string command)
         {
-                string[] words = command.Split(' ');
-                if (words[0] == "add")
+            string[] words = command.Split(' ');
+            if (words[0] == "add")
+            {
+                words[1] = words[1].Replace(',', ' ');
+                words[1] = words[1].Replace('(', ' ');
+                words[1] = words[1].Trim(new Char[] { '<', '>', ')', '\"' });
+                words[1] = words[1].Replace("\"", "");
+                string[] variaveis = words[1].Split(' ');
+                if (variaveis[1] == "DADTestA")
                 {
-                    string[] funcao = words[1].Split('(');
-                    funcao[0] = funcao[0].Substring(1);
-                    if (funcao[0] == "DADTestA")
-                    {
-                        funcao[1] = funcao[1].Trim(new Char[] { '<', '>', '\"', '\"', '(', ')' });
-                        string[] variaveis = funcao[1].Split(',');
-                        variaveis[1] = variaveis[1].Substring(1);
-                        return ("add DADTestA " + variaveis[0] + " " + variaveis[1]);
-                        //Console.WriteLine("DADTestA - " + variaveis[0] + " - " + variaveis[1]);
-                    }
-                    else if (funcao[0] == "DADTestB")
-                    {
-                        funcao[1] = funcao[1].Trim(new Char[] { '<', '>', '\"', '\"', '(', ')' });
-                        string[] variaveis = funcao[1].Split(',');
-                        variaveis[1] = variaveis[1].Substring(1);
-                        variaveis[1] = variaveis[1].Remove(variaveis[1].Length - 1);
-                        return ("add DADTestB " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2]);
-                        //Console.WriteLine("DADTestB - " + variaveis[0] + " - " + variaveis[1] + " - " + variaveis[2]);
-                    }
-                    else if (funcao[0] == "DADTestC")
-                    {
-                        funcao[1] = funcao[1].Trim(new Char[] { '<', '>', '\"', '\"', '(', ')' });
-                        string[] variaveis = funcao[1].Split(',');
-                        variaveis[1] = variaveis[1].Substring(1);
-                        variaveis[1] = variaveis[1].Remove(variaveis[1].Length - 1);
-                        variaveis[2] = variaveis[2].Substring(1);
-                        return ("add DADTestC " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2]);
-                        //Console.WriteLine("DADTestC - " + variaveis[0] + " - " + variaveis[1] + " - " + variaveis[2]);
-                    }
+                    return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3]);
                 }
-                else if (words[0] == "Begin-repeat")
+                else if (variaveis[1] == "DADTestB" || variaveis[1] == "DADTestC")
                 {
-                    
-                    
+                    return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3] + " " + variaveis[4]);
                 }
-                else if (words[0] == "wait")
+            }
+            else if(words[0] == "read")
+            {
+                words[1] = words[1].Replace(',', ' ');
+                words[1] = words[1].Replace('(', ' ');
+                words[1] = words[1].Trim(new Char[] { '<', '>', ')' });
+                words[1] = words[1].Replace("\"", "");
+                string[] variaveis = words[1].Split(' ');
+                if (variaveis.Length <= 2)
                 {
-                    return ("wait " + words[1]);
-                    //Console.WriteLine("Wait - " + words[1]);
+                    return (words[0] + " " + variaveis[0] + " " + variaveis[1]);
                 }
+                else
+                {
+
+                }
+            }
+            else if (words[0] == "ShowA")
+            {
+                return words[0];
+            }
             return null;
         }
 

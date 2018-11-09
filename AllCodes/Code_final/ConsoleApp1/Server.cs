@@ -41,8 +41,6 @@ namespace Projeto_DAD
 
     class Server
     {
-
-
         public static List<EachServer> AllServers;    //All servers present in the pool
         public static EachServer My_Identification;   //Current Server
         private const string path = "..\\..\\..\\Filedatabase\\database.txt"; //database of all servers

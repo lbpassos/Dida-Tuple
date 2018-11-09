@@ -6,6 +6,7 @@ using System.Threading;
 
 namespace Projeto_DAD
 {
+    [Serializable]
     public class DADTestA
     {
         public int i1;
@@ -84,10 +85,9 @@ namespace Projeto_DAD
 
     class ServerService : MarshalByRefObject, IServerServices
     {
-
-        private List<DADTestA> dADTestA = new List<DADTestA>();
-        private List<DADTestB> dADTestB = new List<DADTestB>();
-        private List<DADTestC> dADTestC = new List<DADTestC>();
+        private List<Dictionary<string, DADTestA>> ListDADTestA = new List<Dictionary<string, DADTestA>>();
+        private List<Dictionary<string, DADTestB>> ListDADTestB = new List<Dictionary<string, DADTestB>>();
+        private List<Dictionary<string, DADTestC>> ListDADTestC = new List<Dictionary<string, DADTestC>>();
 
         private static bool Root = false;
         private bool Repeat = false;
@@ -97,7 +97,6 @@ namespace Projeto_DAD
             Root = value;
         }
 
-        //Implement Interface IServerToServer
         public void Ping()
         {
             return;
@@ -107,36 +106,48 @@ namespace Projeto_DAD
             return Root;
         }
 
-        public void Add(int i1, string s1)
+        public void Add(string key, int i1, string s1)
         {
-            dADTestA.Add(new DADTestA(i1, s1));
+            Dictionary<string, DADTestA> dic = new Dictionary<string, DADTestA>();
+            dic.Add(key, new DADTestA(i1, s1));
+            ListDADTestA.Add(dic);
         }
 
-        public void Add(int i1, string s1, int i2)
+        public void Add(string key, int i1, string s1, int i2)
         {
-            dADTestB.Add(new DADTestB(i1, s1, i2));
+            Dictionary<string, DADTestB> dic = new Dictionary<string, DADTestB>();
+            dic.Add(key, new DADTestB(i1, s1, i2));
+            ListDADTestB.Add(dic);
         }
 
-        public void Add(int i1, string s1, string s2)
+        public void Add(string key, int i1, string s1, string s2)
         {
-            dADTestC.Add(new DADTestC(i1, s1, s2));
+            Dictionary<string, DADTestC> dic = new Dictionary<string, DADTestC>();
+            dic.Add(key, new DADTestC(i1, s1, s2));
+            ListDADTestC.Add(dic);
         }
 
-        public void Wait(int milliseconds)
+        public void ShowA()
         {
-            Thread.Sleep(milliseconds);
-        }
-
-        public void End_repeat()
-        {
-           Repeat = false;
+            foreach (Dictionary<string, DADTestA> dic in ListDADTestA)
+            {
+                Console.WriteLine(dic.First());
+            }
         }
 
         //TODO
 
-        public Tuple<int, string> Read(Predicate<Tuple<int, string>> tuple)
+        public void Read(string key)
         {
-            throw new NotImplementedException();
+            MyObjectA objA = new MyObjectA();
+            foreach(Dictionary<string, DADTestA> dic in ListDADTestA)
+            {
+                if(dic.ContainsKey(key))
+                {
+                    Console.WriteLine(dic[key].i1 + " " + dic[key].s1);
+                    //objA._objsA.Add(dic[key]);
+                }
+            }
         }
 
         public Tuple<int, string> Take(Predicate<Tuple<int, string>> tuple)
@@ -144,16 +155,11 @@ namespace Projeto_DAD
             throw new NotImplementedException();
         }
 
-        public void Begin_Repeat(int repetitions, string command)
-        {
-            Repeat = true;
-            while(Repeat == true)
-            {
-                for (int i = 0; i < repetitions; i++)
-                {
-                    //command;
-                }
-            }
-        }
+    }
+
+    [Serializable]
+    public class MyObjectA
+    {
+        public List<DADTestA> _objsA;
     }
 }
