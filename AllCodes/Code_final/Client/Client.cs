@@ -85,7 +85,7 @@ namespace Projeto_DAD
                 if (results[0] == "add")
                 {
                     if (results[2] == "DADTestA") ss.Add(results[1] ,Int32.Parse(results[3]), results[4]);
-                    if (results[2] == "DADTestB") ss.Add(results[1], Int32.Parse(results[4]), results[4], Int32.Parse(results[5]));
+                    if (results[2] == "DADTestB") ss.Add(results[1], Int32.Parse(results[3]), results[4], Int32.Parse(results[5]));
                     if (results[2] == "DADTestC") ss.Add(results[1], Int32.Parse(results[3]), results[4], results[5]);
                 }
                 else if (results[0] == "read")
@@ -93,21 +93,21 @@ namespace Projeto_DAD
                     //Console.WriteLine(string.Join(" ", results));
                     if(results.Length <= 3)
                     {
-                        ss.Read(1, results[1], results[2], null, null, null, null);
+                        ss.Read(results[1], results[2], null, null, null, null);
                     }
                     else
                     {
                         if (results[2] == "DADTestA")
                         {
-                            ss.Read(0, results[1], results[2], results[3], results[4], null, null);
+                            ss.Read(results[1], results[2], results[3], results[4], null, null);
                         }
                         else if (results[2] == "DADTestB")
                         {
-                            ss.Read(0, results[1], results[2], results[3], results[4], results[5], null);
+                            ss.Read(results[1], results[2], results[3], results[4], results[5], null);
                         }
                         else if (results[2] == "DADTestC")
                         {
-                            ss.Read(0, results[1], results[2], results[3], results[4], null, results[5]);
+                            ss.Read(results[1], results[2], results[3], results[4], null, results[5]);
                         }
                     }
                 }
