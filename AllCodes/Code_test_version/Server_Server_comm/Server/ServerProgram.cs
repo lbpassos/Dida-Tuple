@@ -27,6 +27,8 @@ namespace Server
 
         private Random rand;
 
+        //private Image image;
+
         public ServerProgram()
         {
 
@@ -34,6 +36,7 @@ namespace Server
             serversAlive = new ArrayList( Server.AllServers.Count );
             Root_id = 0;
             rand = new Random();
+            
 
             //new Thread(() => PingLoop()).Start();
             new Thread(() => NetworkStatusLoop()).Start();
@@ -75,9 +78,16 @@ namespace Server
                             if ( obj.isRoot()==true )
                             {
                                 Root_id = i; //ID of the current root node
+
+                                Console.WriteLine("My old Image is: {0}\n", ServerService.getImageRepresentation()); //OLD
+
+                                ServerService.setImage( obj.getImage() ); //get the image of the root
+                                
+
                                 STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_KEEP_ALIVE;
                                 flag = true;
                                 Console.WriteLine("ROOT is {0}", Server.AllServers[i].UID.AbsoluteUri);
+                                Console.WriteLine("My new Image is: {0}\n", ServerService.getImageRepresentation()); //NEW
                                 break;
                             }
                             else
@@ -142,6 +152,9 @@ namespace Server
                     break;
                 case STATE_MACHINE_NETWORK_IM_ROOT:
                     Console.WriteLine("ROOT SERVER");
+
+                    ServerService.add("OLA"); //I'm root. I add OLA
+
                     STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_END;
                     break;
                 case STATE_MACHINE_NETWORK_END:
