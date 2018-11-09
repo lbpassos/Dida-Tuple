@@ -37,8 +37,8 @@ namespace Projeto_DAD
                 }
             }
 
-                    TcpChannel channel = new TcpChannel();
-                    ChannelServices.RegisterChannel(channel, false);
+            TcpChannel channel = new TcpChannel();
+            ChannelServices.RegisterChannel(channel, false);
             //Tentar ligar-se a todos os servidores
             foreach (string servidor in AllServers)
             {
@@ -91,7 +91,25 @@ namespace Projeto_DAD
                 else if (results[0] == "read")
                 {
                     //Console.WriteLine(string.Join(" ", results));
-                    if (results[2] == "DADTestA") ss.Read(results[1]);
+                    if(results.Length <= 3)
+                    {
+                        ss.Read(1, results[1], results[2], null, null, null, null);
+                    }
+                    else
+                    {
+                        if (results[2] == "DADTestA")
+                        {
+                            ss.Read(0, results[1], results[2], results[3], results[4], null, null);
+                        }
+                        else if (results[2] == "DADTestB")
+                        {
+                            ss.Read(0, results[1], results[2], results[3], results[4], results[5], null);
+                        }
+                        else if (results[2] == "DADTestC")
+                        {
+                            ss.Read(0, results[1], results[2], results[3], results[4], null, results[5]);
+                        }
+                    }
                 }
                 else if (results[0] == "take")
                 {
@@ -132,11 +150,19 @@ namespace Projeto_DAD
                 string[] variaveis = words[1].Split(' ');
                 if (variaveis.Length <= 2)
                 {
+                    //Console.WriteLine(string.Join(" ", variaveis));
                     return (words[0] + " " + variaveis[0] + " " + variaveis[1]);
                 }
                 else
                 {
-
+                    if (variaveis[1] == "DADTestA")
+                    {
+                        return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3]);
+                    }
+                    else if (variaveis[1] == "DADTestB" || variaveis[1] == "DADTestC")
+                    {
+                        return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3] + " " + variaveis[4]);
+                    }
                 }
             }
             else if (words[0] == "ShowA")

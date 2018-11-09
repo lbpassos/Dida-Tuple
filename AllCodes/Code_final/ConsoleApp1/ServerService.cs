@@ -6,83 +6,6 @@ using System.Threading;
 
 namespace Projeto_DAD
 {
-    [Serializable]
-    public class DADTestA
-    {
-        public int i1;
-        public string s1;
-
-        public DADTestA(int pi1, string ps1)
-        {
-            i1 = pi1;
-            s1 = ps1;
-        }
-        public bool Equals(DADTestA o)
-        {
-            if (o == null)
-            {
-                return false;
-            }
-            else
-            {
-                return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)));
-            }
-        }
-    }
-
-    public class DADTestB
-    {
-        public int i1;
-        public string s1;
-        public int i2;
-
-        public DADTestB(int pi1, string ps1, int pi2)
-        {
-            i1 = pi1;
-            s1 = ps1;
-            i2 = pi2;
-        }
-
-        public bool Equals(DADTestB o)
-        {
-            if (o == null)
-            {
-                return false;
-            }
-            else
-            {
-                return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)) && (this.i2 == o.i2));
-            }
-        }
-    }
-
-    public class DADTestC
-    {
-        public int i1;
-        public string s1;
-        public string s2;
-
-        public DADTestC(int pi1, string ps1, string ps2)
-        {
-            i1 = pi1;
-            s1 = ps1;
-            s2 = ps2;
-        }
-
-        public bool Equals(DADTestC o)
-        {
-            if (o == null)
-            {
-                return false;
-            }
-            else
-            {
-                return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)) && (this.s2.Equals(o.s2)));
-            }
-        }
-    }
-
-
     class ServerService : MarshalByRefObject, IServerServices
     {
         private List<Dictionary<string, DADTestA>> ListDADTestA = new List<Dictionary<string, DADTestA>>();
@@ -137,29 +60,92 @@ namespace Projeto_DAD
 
         //TODO
 
-        public void Read(string key)
+        public MyObject Read(int target, string key, string tipo, string si1, string s1, string si2, string s2)
         {
-            MyObjectA objA = new MyObjectA();
-            foreach(Dictionary<string, DADTestA> dic in ListDADTestA)
+            if (tipo == "DADTestA")
             {
-                if(dic.ContainsKey(key))
+                MyObject objA = new MyObject();
+                foreach (Dictionary<string, DADTestA> dic in ListDADTestA)
                 {
-                    Console.WriteLine(dic[key].i1 + " " + dic[key].s1);
-                    //objA._objsA.Add(dic[key]);
+                    if (target == 1 && dic.ContainsKey(key))        //O cliente pediu um DADTest especifico de uma key
+                    {
+                        if (si1 == null && s1 == null)              //O client NÃO sabe o valor dos dados
+                        {
+                            Console.WriteLine("Target = 1 -> " + dic[key].i1 + dic[key].s1);
+                            //objA._objsA.Add(dic[key]);
+                            return objA;
+                        }
+                        else if (si1 != null && s2 != null && Int32.Parse(si1) == dic[key].i1 && s1 == dic[key].s1)     //O client SABE o valor dos dados
+                        {
+                            Console.WriteLine("Target = 1 -> " + dic[key].i1 + "--- " + dic[key].s1);
+                            //objA._objsA.Add(dic[key]);
+                            return objA;
+                        }
+                        else
+                            return null;
+                    }
+                    else if(target == 0 && dic.ContainsKey(key))    //O cliente pediu todos os DADTest de uma key
+                    {
+                        if (si1 == null && s1 == null)
+                        {
+                            Console.WriteLine("Target = 0 -> " + dic[key].i1 + dic[key].s1);
+                            //objA._objsA.Add(dic[key]);
+                        }
+                        else if (si1 != null && s2 != null && Int32.Parse(si1) == dic[key].i1 && s1 == dic[key].s1)
+                        {
+                            Console.WriteLine("Target = 0 -> " + dic[key].i1 + "--- " + dic[key].s1);
+                            //objA._objsA.Add(dic[key]);
+                        }
+                        else
+                            return null;
+                    }
                 }
+                return objA;
             }
+            else if (tipo == "DADTestB")
+            {
+                MyObject objB = new MyObject();
+                foreach (Dictionary<string, DADTestB> dic in ListDADTestB)
+                {
+                    if (target == 1 && dic.ContainsKey(key))
+                    {
+                        //Console.WriteLine(dic[key].i1 + dic[key].s1 + dic[key].i2);
+                        objB._objsB.Add(dic[key]);
+                        return objB;
+                    }
+                    else if (target == 0 && dic.ContainsKey(key))
+                    {
+                        objB._objsB.Add(dic[key]);
+                    }
+                }
+                return objB;
+            }
+            else if (tipo == "DADTestC")
+            {
+                MyObject objC = new MyObject();
+                foreach (Dictionary<string, DADTestC> dic in ListDADTestC)
+                {
+                    if (target == 1 && dic.ContainsKey(key))
+                    {
+                        //Console.WriteLine(dic[key].i1 + dic[key].s1 + dic[key].s2);
+                        objC._objsC.Add(dic[key]);
+                        return objC;
+                    }
+                    else if (target == 0 && dic.ContainsKey(key))
+                    {
+                        objC._objsC.Add(dic[key]);
+                    }
+                }
+                return objC;
+            }
+            return null;
         }
 
-        public Tuple<int, string> Take(Predicate<Tuple<int, string>> tuple)
-        {
-            throw new NotImplementedException();
-        }
+        //public Tuple<int, string> Take(Predicate<Tuple<int, string>> tuple)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
     }
 
-    [Serializable]
-    public class MyObjectA
-    {
-        public List<DADTestA> _objsA;
-    }
 }
