@@ -11,6 +11,7 @@ namespace Common_types
     {
         bool isRoot(); //check if node is root
         void Ping();
+        Object getImage();
     }
 
 
@@ -19,5 +20,44 @@ namespace Common_types
     {
       
     }
+
+    [Serializable]
+        public class Image
+        {
+            private List<string> s;
+
+            public Image()
+            {
+                s = new List<string>();
+            }
+
+            public string Read(int i)
+            {
+                return s[i];
+            }
+
+            public void Add(string str)
+            {
+                s.Add(str);
+            }
+
+            public void Take(string str)
+            {
+                s.Remove(str);
+            }
+
+            public override string ToString()
+            {
+                string res = "";
+                foreach (string i in s)
+                {
+                    res += i + ", ";
+                }
+
+                return res;
+            }
+
+        }
+
 
 }
