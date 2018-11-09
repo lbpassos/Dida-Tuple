@@ -197,6 +197,7 @@ namespace Projeto_DAD
                 return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)) && (this.s2.Equals(o.s2)));
             }
         }
+       
     }
 
 }

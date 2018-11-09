@@ -7,7 +7,7 @@ using Common_types;
 
 namespace Server
 {
-    class ServerService : MarshalByRefObject, IServerServices
+    class ServerService : MarshalByRefObject, IServerServices, IClientServices
     {
 
         //public static List<string> lista = new List<string>();
@@ -58,6 +58,29 @@ namespace Server
             return image;
         }
 
+        //Implement Interface IClientServices
+       public Object commandInterpreter(Command c)
+        {
+            if (Root == false)
+            {
+                return false;
+            }
+            else
+            {
+                while (ServerProgram.checkSMRState() == 0) ;
+                switch ( c.getCommand() )
+                {
+                    case "READ":
+                        return image.Read( (int)c.getPayload() );
+                    case "ADD":
 
+                        break;
+                    case "TAKE":
+                        break;
+                }
+
+            }
+            return true;
+        }
     }
 }

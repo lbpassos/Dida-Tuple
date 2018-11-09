@@ -124,7 +124,7 @@ namespace Server
                 "MyRemoteObjectName",
                 WellKnownObjectMode.Singleton);
 
-            while (true) ;
+            while (true);
 
         }
 
@@ -133,7 +133,7 @@ namespace Server
 
             new ServerProgram();
 
-            while (true) ;
+            while (true);
 
         }
 

@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Threading;
 using System.Collections;
+using System.Runtime.Remoting.Messaging;
 
 
 namespace Server
 {
-   
+
+    delegate void UpdateHandler(string typeOfCommand, string val); //Delegate to remote call
 
     class ServerProgram
     {
@@ -20,9 +22,18 @@ namespace Server
         private const int STATE_MACHINE_NETWORK_IM_ROOT = 2;
         private const int STATE_MACHINE_NETWORK_END = 3;
 
+        private const int STATE_MACHINE_REPLICATION_INIT = 0;
+        private const int STATE_MACHINE_REPLICATION_READ = 1;
+        private const int STATE_MACHINE_REPLICATION_ADD = 2;
+        private const int STATE_MACHINE_REPLICATION_TAKE = 3;
+
+        private static int STATE_MACHINE_REPLICATION;
         private static int STATE_MACHINE_NETWORK;
 
+        private static readonly object Lock = new object();
+
         private ArrayList serversAlive;
+        private static ArrayList serversWhoAnswered; //servers who manage to update their image sucessfully 
         private int Root_id;
 
         private Random rand;
@@ -33,15 +44,54 @@ namespace Server
         {
 
             STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_START;
+            STATE_MACHINE_REPLICATION = STATE_MACHINE_REPLICATION_INIT;
+
             serversAlive = new ArrayList( Server.AllServers.Count );
+            serversWhoAnswered = new ArrayList(Server.AllServers.Count);
+
             Root_id = 0;
             rand = new Random();
             
 
             //new Thread(() => PingLoop()).Start();
             new Thread(() => NetworkStatusLoop()).Start();
+            new Thread(() => StateMachineReplicationLoop()).Start();
 
         }
+
+
+        public static int checkSMRState()
+        {
+            return STATE_MACHINE_REPLICATION;
+        }
+
+        public static bool changeSMRState(int state)
+        {
+            if( STATE_MACHINE_REPLICATION==STATE_MACHINE_REPLICATION_INIT)
+            {
+                STATE_MACHINE_REPLICATION = state;
+                return true;
+            }
+            return false;
+            
+        }
+
+
+
+        private static void OnCallEnded(IAsyncResult ar)
+        {
+            UpdateHandler handler = ((AsyncResult)ar).AsyncDelegate as UpdateHandler;
+            int index = (int)ar.AsyncState;
+
+            handler.EndInvoke(ar);
+
+            lock (Lock)
+            {
+                serversWhoAnswered.Add(index);
+            }
+            
+        }
+
 
         private void NetworkStatusLoop()
         {
@@ -51,6 +101,33 @@ namespace Server
                 Thread.Sleep(1000);
             }
         }
+
+        private void StateMachineReplicationLoop()
+        {
+            while (true)
+            {
+                StateMachineReplication();
+                Thread.Sleep(1000);
+            }
+        }
+
+        private void StateMachineReplication()
+        {
+            switch (STATE_MACHINE_REPLICATION)
+            {
+                case STATE_MACHINE_REPLICATION_INIT:
+                    break;
+                case STATE_MACHINE_REPLICATION_READ:
+                    break;
+                case STATE_MACHINE_REPLICATION_ADD:
+                    break;
+                case STATE_MACHINE_REPLICATION_TAKE:
+                    break;
+            }
+
+        }
+
+
 
         private void NetworkStatusStateMachine()
         {

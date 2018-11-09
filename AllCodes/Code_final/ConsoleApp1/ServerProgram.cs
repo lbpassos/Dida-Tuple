@@ -37,7 +37,7 @@ namespace Projeto_DAD
             new Thread(() => NetworkStatusLoop()).Start();
 
         }
-
+        
         private void NetworkStatusLoop()
         {
             while (STATE_MACHINE_NETWORK != STATE_MACHINE_NETWORK_END)
