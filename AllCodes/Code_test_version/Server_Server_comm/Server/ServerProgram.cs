@@ -116,6 +116,7 @@ namespace Server
             switch (STATE_MACHINE_REPLICATION)
             {
                 case STATE_MACHINE_REPLICATION_INIT:
+
                     break;
                 case STATE_MACHINE_REPLICATION_READ:
                     break;

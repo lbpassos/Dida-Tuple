@@ -116,12 +116,13 @@ namespace Projeto_DAD
 
 
     [Serializable]
-    public class MyObject
+    public class MyObject               //Será que vale a pena criar um objecto só para enviar os DADTest's?????
     {
-        public List<DADTestA> _objsA;
-        public List<DADTestB> _objsB;
-        public List<DADTestC> _objsC;
+        public DADTestA _objsA;
+        public DADTestB _objsB;
+        public DADTestC _objsC;
     }
+
 
     [Serializable]
     public class DADTestA
@@ -145,8 +146,14 @@ namespace Projeto_DAD
                 return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)));
             }
         }
+
+        public override string ToString()
+        {
+            return ("DADTestA(" + i1 + ",\"" + s1 + "\")");
+        }
     }
 
+    [Serializable]
     public class DADTestB
     {
         public int i1;
@@ -171,8 +178,14 @@ namespace Projeto_DAD
                 return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)) && (this.i2 == o.i2));
             }
         }
+
+        public override string ToString()
+        {
+            return ("DADTestB(" + i1 + ",\"" + s1 + "\"," + i2 + ")");
+        }
     }
 
+    [Serializable]
     public class DADTestC
     {
         public int i1;
@@ -197,7 +210,12 @@ namespace Projeto_DAD
                 return ((this.i1 == o.i1) && (this.s1.Equals(o.s1)) && (this.s2.Equals(o.s2)));
             }
         }
-       
+
+        public override string ToString()
+        {
+            return ("DADTestC(" + i1 + ",\"" + s1 + "\",\"" + s2 + "\")");
+        }
+
     }
 
 }

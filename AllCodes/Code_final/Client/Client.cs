@@ -28,7 +28,11 @@ namespace Projeto_DAD
         static void Main(string[] args)
         {
             string command = "";
-            new Thread(() => PingLoop()).Start();
+            Thread pingThread = new Thread(new ThreadStart(PingLoop));
+
+
+           
+            
             //Ler a lista de todos os servidores
             AllServers = new List<string>();
             string[] lines = File.ReadAllLines(path);
@@ -69,6 +73,7 @@ namespace Projeto_DAD
                                     RootServer = AllServers[i];
                                     Console.WriteLine(RootServer + " is the ROOT Server");
                                     RemotingServices.Marshal(new ClientServices(), "MyRemoteObjectName", typeof(ClientServices));
+                                    pingThread.Start();
                                     STATE_CLIENT = STATE_CLIENT_WAIT_FOR_INPUT;
                                     break;
                                 }
@@ -210,6 +215,7 @@ namespace Projeto_DAD
                 {
                     //ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
 
+                    //ss = (IServerServices)Activator.GetObject(typeof(IServerServices), AllServers[i] + "MyRemoteObjectName");
                     ss = (IServerServices)Activator.GetObject(typeof(IServerServices), AllServers[Convert.ToInt32(RootServer) ] + "MyRemoteObjectName");
                     ss.Ping();
                     //Console.WriteLine("ALIVE: {0}", Server.AllServers[i].UID.AbsoluteUri);
@@ -221,7 +227,7 @@ namespace Projeto_DAD
                     Console.WriteLine("ROOT DEATH");
                     STATE_CLIENT = STATE_CLIENT_DISCOVER;
 
-                    Console.WriteLine(e);
+                    //Console.WriteLine(e);
                 }
 
                 Thread.Sleep(1000);
