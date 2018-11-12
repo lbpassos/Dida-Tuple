@@ -73,7 +73,6 @@ namespace Server
                     case "READ":
                         return image.Read( (int)c.getPayload() );
                     case "ADD":
-
                         break;
                     case "TAKE":
                         break;

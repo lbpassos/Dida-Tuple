@@ -10,21 +10,15 @@ namespace Projeto_DAD
 {
     public interface IServerServices
     {
-        void Add(string key, int i1, string s1);                //Adds a DADTestA
+        void Add(object tuple);
 
-        void Add(string key, int i1, string s1, int i2);        //Adds a DADTestB
+        object Read(object tuple);
 
-        void Add(string key, int i1, string s1, string s2);     //Adds a DADTestC
-
-        MyObject Read(string key, string tipo, string i1, string s1, string i2, string s2);                //Reads all objects of a type from the key
-
-        //Tuple<int, string> Take(Predicate<Tuple<int, string>> tuple); // ??????????????????
+        object Take(object tuple);
 
         bool isRoot(); //check if node is root
+
         void Ping();
-
-        void ShowA();
-
     }
 
 
@@ -112,15 +106,6 @@ namespace Projeto_DAD
             else
                 Console.WriteLine("\nThe pid specified already exists : {0}", id);
         }
-    }
-
-
-    [Serializable]
-    public class MyObject               //Será que vale a pena criar um objecto só para enviar os DADTest's?????
-    {
-        public DADTestA _objsA;
-        public DADTestB _objsB;
-        public DADTestC _objsC;
     }
 
 

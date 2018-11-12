@@ -20,6 +20,7 @@ namespace Projeto_DAD
 
         public void Wait(int milliseconds)
         {
+            Console.WriteLine("waiting " + milliseconds);
             Thread.Sleep(milliseconds);
         }
     }

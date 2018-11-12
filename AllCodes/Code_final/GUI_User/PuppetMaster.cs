@@ -21,7 +21,7 @@ namespace Projeto_DAD
     public partial class PuppetMaster : Form
     {
         private Dictionary<string, MyRemoteObject> PCS_Url; //address PCS
-        private const int port = 10000; //Port in the PCS
+        private const int port = 1000; //Port in the PCS
 
         private string typeOfExecution;
         private string filePath;

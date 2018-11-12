@@ -7,7 +7,6 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
-using System.Windows.Forms;
 
 namespace Projeto_DAD
 {
@@ -88,51 +87,57 @@ namespace Projeto_DAD
                     case STATE_CLIENT_INTERACT:
                         Console.Write("Command: ");
                         command = Console.ReadLine();
-                        if (command == "")
-                        {
-                            break;
-                        }
                         string[] results;
                         try
                         {
-                            results = CheckCommands(command).Split(' ');
-                            if (results[0] == "add")
-                            {
-                                if (results[2] == "DADTestA") ss.Add(results[1], Int32.Parse(results[3]), results[4]);
-                                if (results[2] == "DADTestB") ss.Add(results[1], Int32.Parse(results[3]), results[4], Int32.Parse(results[5]));
-                                if (results[2] == "DADTestC") ss.Add(results[1], Int32.Parse(results[3]), results[4], results[5]);
-                            }
-                            else if (results[0] == "read")
-                            {
-                                //Console.WriteLine(string.Join(" ", results));
-                                if (results.Length <= 3)
-                                {
-                                    ss.Read(results[1], results[2], null, null, null, null);
-                                }
-                                else
-                                {
-                                    if (results[2] == "DADTestA")
-                                    {
-                                        ss.Read(results[1], results[2], results[3], results[4], null, null);
-                                    }
-                                    else if (results[2] == "DADTestB")
-                                    {
-                                        ss.Read(results[1], results[2], results[3], results[4], results[5], null);
-                                    }
-                                    else if (results[2] == "DADTestC")
-                                    {
-                                        ss.Read(results[1], results[2], results[3], results[4], null, results[5]);
-                                    }
-                                }
-                            }
-                            else if (results[0] == "take")
-                            {
-                                //TODO
-                            }
-                            else if (results[0] == "ShowA")
-                            {
-                                ss.ShowA();
-                            }
+                            //results = CheckCommands(command).Split(' ');
+                            command = command.Replace("<", "");
+                            command = command.Replace(">", "");
+                            results = command.Split(' ');
+                            results[1] = results[1].Replace(",D", " D");
+                            results[1] = results[1].Replace("),", ") ");
+                            Console.WriteLine( results[0] + " " + results[1]);
+                            //if (results[0] == "add")
+                            //{
+                            //    if (results[2] == "DADTestA") ss.Add(results[1], Int32.Parse(results[3]), results[4]);
+                            //    if (results[2] == "DADTestB") ss.Add(results[1], Int32.Parse(results[3]), results[4], Int32.Parse(results[5]));
+                            //    if (results[2] == "DADTestC") ss.Add(results[1], Int32.Parse(results[3]), results[4], results[5]);
+                            //}
+                            //else if (results[0] == "read")
+                            //{
+                            //    //Console.WriteLine(string.Join(" ", results));
+                            //    if (results.Length <= 3)
+                            //    {
+                            //        ss.Read(results[1], results[2], null, null, null, null);
+                            //    }
+                            //    else
+                            //    {
+                            //        if (results[2] == "DADTestA")
+                            //        {
+                            //            ss.Read(results[1], results[2], results[3], results[4], null, null);
+                            //        }
+                            //        else if (results[2] == "DADTestB")
+                            //        {
+                            //            ss.Read(results[1], results[2], results[3], results[4], results[5], null);
+                            //        }
+                            //        else if (results[2] == "DADTestC")
+                            //        {
+                            //            ss.Read(results[1], results[2], results[3], results[4], null, results[5]);
+                            //        }
+                            //    }
+                            //}
+                            //else if (results[0] == "take")
+                            //{
+                            //    //TODO
+                            //}
+                            //else if (results[0] == "wait")
+                            //{
+                            //    cs.Wait(int.Parse(results[1]));
+                            //}
+                            //else if (results[0] == "ShowA")
+                            //{
+                            //    ss.ShowA();
+                            //}
                         }
                         catch (Exception e)
                         {
@@ -148,55 +153,59 @@ namespace Projeto_DAD
 
         }
 
-        public static string CheckCommands(string command)
-        {
-            string[] words = command.Split(' ');
-            if (words[0] == "add")
-            {
-                words[1] = words[1].Replace(',', ' ');
-                words[1] = words[1].Replace('(', ' ');
-                words[1] = words[1].Trim(new Char[] { '<', '>', ')', '\"' });
-                words[1] = words[1].Replace("\"", "");
-                string[] variaveis = words[1].Split(' ');
-                if (variaveis[1] == "DADTestA")
-                {
-                    return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3]);
-                }
-                else if (variaveis[1] == "DADTestB" || variaveis[1] == "DADTestC")
-                {
-                    return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3] + " " + variaveis[4]);
-                }
-            }
-            else if(words[0] == "read")
-            {
-                words[1] = words[1].Replace(',', ' ');
-                words[1] = words[1].Replace('(', ' ');
-                words[1] = words[1].Trim(new Char[] { '<', '>', ')' });
-                words[1] = words[1].Replace("\"", "");
-                string[] variaveis = words[1].Split(' ');
-                if (variaveis.Length <= 2)
-                {
-                    //Console.WriteLine(string.Join(" ", variaveis));
-                    return (words[0] + " " + variaveis[0] + " " + variaveis[1]);
-                }
-                else
-                {
-                    if (variaveis[1] == "DADTestA")
-                    {
-                        return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3]);
-                    }
-                    else if (variaveis[1] == "DADTestB" || variaveis[1] == "DADTestC")
-                    {
-                        return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3] + " " + variaveis[4]);
-                    }
-                }
-            }
-            else if (words[0] == "ShowA")
-            {
-                return words[0];
-            }
-            return null;
-        }
+        //public static string CheckCommands(string command)
+        //{
+        //    string[] words = command.Split(' ');
+        //    if (words[0] == "add")
+        //    {
+        //        words[1] = words[1].Replace(',', ' ');
+        //        words[1] = words[1].Replace('(', ' ');
+        //        words[1] = words[1].Trim(new Char[] { '<', '>', ')', '\"' });
+        //        words[1] = words[1].Replace("\"", "");
+        //        string[] variaveis = words[1].Split(' ');
+        //        if (variaveis[1] == "DADTestA")
+        //        {
+        //            return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3]);
+        //        }
+        //        else if (variaveis[1] == "DADTestB" || variaveis[1] == "DADTestC")
+        //        {
+        //            return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3] + " " + variaveis[4]);
+        //        }
+        //    }
+        //    else if(words[0] == "read")
+        //    {
+        //        words[1] = words[1].Replace(',', ' ');
+        //        words[1] = words[1].Replace('(', ' ');
+        //        words[1] = words[1].Trim(new Char[] { '<', '>', ')' });
+        //        words[1] = words[1].Replace("\"", "");
+        //        string[] variaveis = words[1].Split(' ');
+        //        if (variaveis.Length <= 2)
+        //        {
+        //            //Console.WriteLine(string.Join(" ", variaveis));
+        //            return (words[0] + " " + variaveis[0] + " " + variaveis[1]);
+        //        }
+        //        else
+        //        {
+        //            if (variaveis[1] == "DADTestA")
+        //            {
+        //                return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3]);
+        //            }
+        //            else if (variaveis[1] == "DADTestB" || variaveis[1] == "DADTestC")
+        //            {
+        //                return (words[0] + " " + variaveis[0] + " " + variaveis[1] + " " + variaveis[2] + " " + variaveis[3] + " " + variaveis[4]);
+        //            }
+        //        }
+        //    }
+        //    else if (words[0] == "wait")
+        //    {
+        //        return (words[0] + words[1]);
+        //    }
+        //    else if (words[0] == "ShowA")
+        //    {
+        //        return words[0];
+        //    } 
+        //    return null;
+        //}
 
         private static void PingLoop()
         {
@@ -215,7 +224,7 @@ namespace Projeto_DAD
                 {
                     //Console.WriteLine("DEAD: {0}", Server.AllServers[i].UID.AbsoluteUri);
                     Console.WriteLine();
-                    Console.WriteLine("ROOT IS DEAD, PRESS ENTER TO SEARCH FOR A NEW SERVER");
+                    Console.WriteLine("ROOT IS DEAD, PRESS <ENTER> TO SEARCH FOR A NEW SERVER");
                     //Console.WriteLine(e);
                     RemotingServices.Disconnect(cs);
                     STATE_CLIENT = STATE_CLIENT_DISCOVER;
