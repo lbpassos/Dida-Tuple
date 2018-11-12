@@ -16,7 +16,7 @@ namespace Projeto_DAD
 
         void Add(string key, int i1, string s1, string s2);     //Adds a DADTestC
 
-        MyObject Read(string key, string tipo, string i1, string s1, string i2, string s2);                //Reads all objects of a type from the key
+        MyObject Read(int target, string key, string tipo, string i1, string s1, string i2, string s2);                //Reads all objects of a type from the key
 
         //Tuple<int, string> Take(Predicate<Tuple<int, string>> tuple); // ??????????????????
 
@@ -215,6 +215,7 @@ namespace Projeto_DAD
         {
             return ("DADTestC(" + i1 + ",\"" + s1 + "\",\"" + s2 + "\")");
         }
+
     }
 
 }

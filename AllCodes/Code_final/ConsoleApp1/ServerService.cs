@@ -60,24 +60,44 @@ namespace Projeto_DAD
 
         //TODO
 
-        public MyObject Read(string key, string tipo, string si1, string s1, string si2, string s2)
+        public MyObject Read(int target, string key, string tipo, string si1, string s1, string si2, string s2)
         {
             if (tipo == "DADTestA")
             {
                 MyObject objA = new MyObject();
                 foreach (Dictionary<string, DADTestA> dic in ListDADTestA)
                 {
-                    if (dic.ContainsKey(key) && si1 == null && s1 == null)              //O client NÃO sabe o valor dos dados
+                    if (target == 1 && dic.ContainsKey(key))        //O cliente pediu um DADTest especifico de uma key
                     {
-                        Console.WriteLine(dic[key].ToString());
-                        objA._objsA = dic[key];
-                        return objA;
+                        if (si1 == null && s1 == null)              //O client NÃO sabe o valor dos dados
+                        {
+                            Console.WriteLine("Target = 1 -> " + dic[key].i1 + dic[key].s1);
+                            //objA._objsA.Add(dic[key]);
+                            return objA;
+                        }
+                        else if (si1 != null && s2 != null && Int32.Parse(si1) == dic[key].i1 && s1 == dic[key].s1)     //O client SABE o valor dos dados
+                        {
+                            Console.WriteLine("Target = 1 -> " + dic[key].i1 + "--- " + dic[key].s1);
+                            //objA._objsA.Add(dic[key]);
+                            return objA;
+                        }
+                        else
+                            return null;
                     }
-                    else if (dic.ContainsKey(key) && int.Parse(si1) == dic[key].i1 && s1.Equals(dic[key].s1))     //O client SABE o valor dos dados
+                    else if (target == 0 && dic.ContainsKey(key))    //O cliente pediu todos os DADTest de uma key
                     {
-                        Console.WriteLine(dic[key].ToString());
-                        objA._objsA = dic[key];
-                        return objA;
+                        if (si1 == null && s1 == null)
+                        {
+                            Console.WriteLine("Target = 0 -> " + dic[key].i1 + dic[key].s1);
+                            //objA._objsA.Add(dic[key]);
+                        }
+                        else if (si1 != null && s2 != null && Int32.Parse(si1) == dic[key].i1 && s1 == dic[key].s1)
+                        {
+                            Console.WriteLine("Target = 0 -> " + dic[key].i1 + "--- " + dic[key].s1);
+                            //objA._objsA.Add(dic[key]);
+                        }
+                        else
+                            return null;
                     }
                 }
                 return objA;
@@ -87,17 +107,15 @@ namespace Projeto_DAD
                 MyObject objB = new MyObject();
                 foreach (Dictionary<string, DADTestB> dic in ListDADTestB)
                 {
-                    if (dic.ContainsKey(key) && si1 == null && s1 == null && si2 == null)              //O client NÃO sabe o valor dos dados
+                    if (target == 1 && dic.ContainsKey(key))
                     {
-                        Console.WriteLine(dic[key].ToString());
-                        objB._objsB = dic[key];
+                        //Console.WriteLine(dic[key].i1 + dic[key].s1 + dic[key].i2);
+                        objB._objsB.Add(dic[key]);
                         return objB;
                     }
-                    else if (dic.ContainsKey(key) && int.Parse(si1) == dic[key].i1 && s1.Equals(dic[key].s1) && int.Parse(si2) == dic[key].i2)     //O client SABE o valor dos dados
+                    else if (target == 0 && dic.ContainsKey(key))
                     {
-                        Console.WriteLine(dic[key].ToString());
-                        objB._objsB = dic[key];
-                        return objB;
+                        objB._objsB.Add(dic[key]);
                     }
                 }
                 return objB;
@@ -107,17 +125,15 @@ namespace Projeto_DAD
                 MyObject objC = new MyObject();
                 foreach (Dictionary<string, DADTestC> dic in ListDADTestC)
                 {
-                    if (dic.ContainsKey(key) && si1 == null && s1 == null && s2 == null)              //O client NÃO sabe o valor dos dados
+                    if (target == 1 && dic.ContainsKey(key))
                     {
-                        Console.WriteLine(dic[key].ToString());
-                        objC._objsC = dic[key];
+                        //Console.WriteLine(dic[key].i1 + dic[key].s1 + dic[key].s2);
+                        objC._objsC.Add(dic[key]);
                         return objC;
                     }
-                    else if (dic.ContainsKey(key) && int.Parse(si1) == dic[key].i1 && s1.Equals(dic[key].s1) && s2.Equals(dic[key].s2))     //O client SABE o valor dos dados
+                    else if (target == 0 && dic.ContainsKey(key))
                     {
-                        Console.WriteLine(dic[key].ToString());
-                        objC._objsC = dic[key];
-                        return objC;
+                        objC._objsC.Add(dic[key]);
                     }
                 }
                 return objC;
