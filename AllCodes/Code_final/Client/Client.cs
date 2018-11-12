@@ -7,19 +7,20 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
+using System.Windows.Forms;
 
 namespace Projeto_DAD
 {
     class Client
     {
         private static IServerServices ss;
+        private static ClientServices cs = new ClientServices();
         private static string RootServer;
         public static List<string> AllServers;    //All servers present in the pool
         private const string path = "..\\..\\..\\Filedatabase\\database.txt"; //database of all servers
 
         private const int STATE_CLIENT_DISCOVER = 0;
         private const int STATE_CLIENT_INTERACT = 1;
-        private const int STATE_CLIENT_WAIT_FOR_INPUT = 2;
 
         private static int STATE_CLIENT = STATE_CLIENT_DISCOVER;
 
@@ -27,7 +28,6 @@ namespace Projeto_DAD
         static void Main(string[] args)
         {
             string command = "";
-            Thread ping = new Thread(() => PingLoop());
             //Ler a lista de todos os servidores
             AllServers = new List<string>();
             string[] lines = File.ReadAllLines(path);
@@ -65,9 +65,9 @@ namespace Projeto_DAD
                                     Console.WriteLine("Connected to :" + AllServers[i]);
                                     RootServer = AllServers[i];
                                     Console.WriteLine(RootServer + " is the ROOT Server");
-                                    RemotingServices.Marshal(new ClientServices(), "MyRemoteObjectName", typeof(ClientServices));
-                                    ping.Start();
-                                    STATE_CLIENT = STATE_CLIENT_WAIT_FOR_INPUT;
+                                    RemotingServices.Marshal(cs, "MyRemoteObjectName", typeof(ClientServices));
+                                    new Thread(() => PingLoop()).Start();
+                                    STATE_CLIENT = STATE_CLIENT_INTERACT;
                                     break;
                                 }
                                 else
@@ -85,15 +85,13 @@ namespace Projeto_DAD
                             i = (i + 1) % AllServers.Count;
                         }
                         break;
-                    case STATE_CLIENT_WAIT_FOR_INPUT:
+                    case STATE_CLIENT_INTERACT:
                         Console.Write("Command: ");
                         command = Console.ReadLine();
-                        STATE_CLIENT = STATE_CLIENT_INTERACT;
-                        break;
-                    case STATE_CLIENT_INTERACT:
-                        //Console.Write("Command: ");
-                        //string command = Console.ReadLine();
-
+                        if (command == "")
+                        {
+                            break;
+                        }
                         string[] results;
                         try
                         {
@@ -138,6 +136,7 @@ namespace Projeto_DAD
                         }
                         catch (Exception e)
                         {
+                            Console.WriteLine(e);
                             Console.WriteLine("Wrong type of command!");
                             //continue;
                         }
@@ -208,17 +207,19 @@ namespace Projeto_DAD
                 {
                     //ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
 
-                    ss = (IServerServices)Activator.GetObject(typeof(IServerServices), AllServers[Int32.Parse(RootServer)-1] + "MyRemoteObjectName");
+                    //ss = (IServerServices)Activator.GetObject(typeof(IServerServices), AllServers[Int32.Parse(RootServer)-1] + "MyRemoteObjectName");
                     ss.Ping();
-                    Console.WriteLine("ALIVE: " + AllServers[Convert.ToInt32(RootServer) -1]);
+                    //Console.WriteLine("ROOT IS ALIVE");
                 }
                 catch (Exception e)
                 {
                     //Console.WriteLine("DEAD: {0}", Server.AllServers[i].UID.AbsoluteUri);
-                    Console.WriteLine("ROOT DEATH");
-                    STATE_CLIENT = STATE_CLIENT_DISCOVER;
-
+                    Console.WriteLine();
+                    Console.WriteLine("ROOT IS DEAD, PRESS ENTER TO SEARCH FOR A NEW SERVER");
                     //Console.WriteLine(e);
+                    RemotingServices.Disconnect(cs);
+                    STATE_CLIENT = STATE_CLIENT_DISCOVER;
+                    break;
                 }
 
                 Thread.Sleep(1000);
