@@ -169,38 +169,39 @@ namespace TupleSpace
 
             
 
-            object[] o1 = { new StringEmulator("a"), new DADTestA(1, "b") };
+            object[] o1 = { new StringEmulator("a"), new DADTestA(1, "b") }; //Cria Tuplo <"a",DADTestA(1, "b")>
             MyTuple um = new MyTuple( o1 );
             //Console.WriteLine("Tuplo 1:" + um);
 
-            ts.add( um );
+            ts.add( um );                                                   //Insere no espaço de tuplos
 
-            object[] o2 = { new DADTestA(1, "a"), new DADTestB(1, "c", 2), new DADTestC(1, "b", "d") };
+            object[] o2 = { new DADTestA(1, "a"), new DADTestB(1, "c", 2), new DADTestC(1, "b", "d") }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
             MyTuple dois = new MyTuple(o2);
             //Console.WriteLine("Tuplo 2:" + dois);
 
-            ts.add(dois);
+            ts.add(dois);                                                   //Insere no espaço de tuplos
             //Console.WriteLine(ts);
 
-            object[] o3 = { new StringEmulator("a") };
+            object[] o3 = { new StringEmulator("a") };                      //Cria Tuplo <"a">
             MyTuple tres = new MyTuple(o3);
-            ts.add(tres);
+            ts.add(tres);                                                   //Insere no espaço de tuplos
             Console.WriteLine("Espaço de tuplos:");
             Console.WriteLine(ts);
 
-            Console.WriteLine( "READ {0}: {1}", dois, ts.read(dois));
-            Console.WriteLine("READ {0}: {1}", um, ts.read(um));
+            Console.WriteLine( "READ {0}: {1}", dois, ts.read(dois));       //Ler tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
+            Console.WriteLine("READ {0}: {1}", um, ts.read(um));            //Ler tuplo <"a",DADTestA(1, "b")>
 
             //object[] c = { new StringEmulator("a") };
-            object[] o4 = { new StringEmulator("*") };
+            object[] o4 = { new StringEmulator("*") };                      //Ler por WILDCARD tuplo <"*">
             MyTuple quatro = new MyTuple(o4);
-            Console.WriteLine("READ {0}: {1}", quatro, ts.read(quatro));
+            Console.WriteLine("READ {0}: {1}", quatro, ts.read(quatro));    //Apanha Tuplo  <"a">
 
-            object[] o5 = { new StringEmulator("*"), new DADTestB(1, "c", 2), new DADTestC(1, "b", "d") };
+            object[] o5 = { new StringEmulator("*"), new DADTestB(1, "c", 2), new DADTestC(1, "b", "d") };  //Ler por WILDCARD tuplo  <"*",DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
             MyTuple cinco = new MyTuple(o5);
-            Console.WriteLine("READ {0}: {1}", cinco, ts.read(cinco));
+            Console.WriteLine("READ {0}: {1}", cinco, ts.read(cinco));                                      //Apanha <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
 
             ts.take(tres);
+            Console.WriteLine();
             Console.WriteLine("Espaço de tuplos:");
             Console.WriteLine(ts);
 
