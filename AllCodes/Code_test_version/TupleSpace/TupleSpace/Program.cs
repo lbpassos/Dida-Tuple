@@ -205,6 +205,14 @@ namespace TupleSpace
             Console.WriteLine("Espaço de tuplos:");
             Console.WriteLine(ts);
 
+            object[] o6 = { new StringEmulator("aaaa") };                      //Cria Tuplo <"aaaa">
+            MyTuple seis = new MyTuple(o6);
+            ts.add(seis);                                                   //Insere no espaço de tuplos
+
+            object[] o7 = { new StringEmulator("*a") };                      //Ler por WILDCARD tuplo <"*a">
+            MyTuple sete = new MyTuple(o7);
+            Console.WriteLine("READ {0}: {1}", sete, ts.read(sete));    //Apanha Tuplo  <"aaaa">
+
             Console.ReadLine();
 
 
