@@ -51,6 +51,7 @@ namespace ServerClientBidirectional
         {
             message_received = true;
             message = info.Message;
+            Console.WriteLine("Ola");
         }
 
 

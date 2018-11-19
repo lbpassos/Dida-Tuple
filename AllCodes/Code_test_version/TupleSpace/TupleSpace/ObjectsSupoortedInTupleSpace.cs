@@ -23,23 +23,20 @@ namespace TupleSpace
         public override bool Equals(object o)
         {
 
-            StringEmulator sm = o as StringEmulator; //Test WILDCARD
-            if (sm != null)
+            string t = o as string;
+            if (t != null)
             {
-                if( sm.GetString().Equals("*"))
+                if( t.Equals("DADTestA"))
                 {
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
             }
+            
 
             DADTestA a = o as DADTestA;
             if (a == null)
             {
-                return false;
+                return true;
             }
             else
             {
@@ -76,23 +73,20 @@ namespace TupleSpace
         public override bool Equals(object o)
         {
 
-            StringEmulator sm = o as StringEmulator; //Test WILDCARD
-            if (sm != null)
+            string t = o as string;
+            if (t != null)
             {
-                if (sm.GetString().Equals("*"))
+                if (t.Equals("DADTestB"))
                 {
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
             }
+
 
             DADTestB b = o as DADTestB;
             if (b == null)
             {
-                return false;
+                return true;
             }
             else
             {
@@ -127,23 +121,20 @@ namespace TupleSpace
 
         public override bool Equals(object o)
         {
-            StringEmulator sm = o as StringEmulator; //Test WILDCARD
-            if (sm != null)
+            string t = o as string;
+            if (t != null)
             {
-                if (sm.GetString().Equals("*"))
+                if (t.Equals("DADTestC"))
                 {
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
             }
+
 
             DADTestC c = o as DADTestC;
             if (c == null)
             {
-                return false;
+                return true;
             }
             else
             {

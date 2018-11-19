@@ -77,11 +77,20 @@ namespace TupleSpace
 
         public override string ToString()
         {
+           
             string tmp = "<";
 
             for (int i=0; i<ObjTuple.Count; ++i)
             {
-                tmp += ObjTuple[i].ToString();
+                try
+                {
+                    tmp += ObjTuple[i].ToString();
+                }
+                catch(NullReferenceException e)
+                {
+                    tmp += "null";
+                }
+                
                 if(i+1 < ObjTuple.Count)
                 {
                     tmp += ",";
@@ -169,13 +178,20 @@ namespace TupleSpace
 
             
 
-            object[] o1 = { new StringEmulator("a"), new DADTestA(1, "b") }; //Cria Tuplo <"a",DADTestA(1, "b")>
+            object[] o1 = { "\"a\"", new DADTestA(1, "b") }; //Cria Tuplo <"a",DADTestA(1, "b")>
             MyTuple um = new MyTuple( o1 );
-            //Console.WriteLine("Tuplo 1:" + um);
+            Console.WriteLine("Tuplo 1:" + um);
 
             ts.add( um );                                                   //Insere no espaço de tuplos
+            Console.WriteLine("Tuplo:" + ts);
 
-            object[] o2 = { new DADTestA(1, "a"), new DADTestB(1, "c", 2), new DADTestC(1, "b", "d") }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
+            //object[] o2 = { "\"a\"", "DADTestA" }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
+            //object[] o2 = { "\"a\"", new DADTestA(1, "b") }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
+            object[] o2 = { "\"a\"", null }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
+            MyTuple dois = new MyTuple(o2);
+            Console.WriteLine("READ {0}: {1}", dois, ts.read(dois));    //Apanha Tuplo  <"a">
+
+            /*object[] o2 = { new DADTestA(1, "a"), new DADTestB(1, "c", 2), new DADTestC(1, "b", "d") }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
             MyTuple dois = new MyTuple(o2);
             //Console.WriteLine("Tuplo 2:" + dois);
 
@@ -213,6 +229,7 @@ namespace TupleSpace
             MyTuple sete = new MyTuple(o7);
             Console.WriteLine("READ {0}: {1}", sete, ts.read(sete));    //Apanha Tuplo  <"aaaa">
 
+    */
             Console.ReadLine();
 
 

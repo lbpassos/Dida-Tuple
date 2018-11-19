@@ -16,10 +16,10 @@ namespace FiltroInput
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define a test string.        
-            //string text = "\"a\",DADTestA(1,\"a\"),DADTestB(1,\"c\",2),DADTestC(1,\"b\",\"d\")";
+            string text = "\"a\",DADTestA(1,\"a\"),DADTestB(1,\"c\",2),DADTestC(1,\"b\",\"d\")";
             //string text = "\"2\"";
             //string text = "\"a\",\"b\",\"c\",\"d\",\"e\"";
-            string text = "DADTestA,DADTestB,DADTestC";
+            //string text = "DADTestA,DADTestB,DADTestC";
 
             // Find matches.
             MatchCollection matches = rx.Matches(text);
