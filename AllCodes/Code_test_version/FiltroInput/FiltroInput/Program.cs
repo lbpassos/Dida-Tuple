@@ -12,20 +12,22 @@ namespace FiltroInput
             List<string> myList = new List<string>();
 
 
-            Regex rx = new Regex(@"(\w+\(((,?((\d)+),?)|(,?""\w+"",?))+\))|(""\w+"")|(\w+)",
+            //Regex rx = new Regex(@"(\w+\(((,?((\d)+),?)|(,?""\w+"",?))+\))|(""\w+"")|(\w+)",
+            Regex rx = new Regex(@"(""\**\w*\**"")|(DADTestA(\(\d+,""\w+""\))*)|(DADTestB(\(\d+,""\w+"",\d+\))*)|(DADTestC(\(\d+,""\w+"",""\w+""\))*)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define a test string.        
-            string text = "\"a\",DADTestA(1,\"a\"),DADTestB(1,\"c\",2),DADTestC(1,\"b\",\"d\")";
+            //string text = "\"a\",DADTestA(1,\"a\"),DADTestB(1,\"c\",2),DADTestC(1,\"b\",\"d\")";
             //string text = "\"2\"";
             //string text = "\"a\",\"b\",\"c\",\"d\",\"e\"";
             //string text = "DADTestA,DADTestB,DADTestC";
+            string text = "\"*a\"";
 
             // Find matches.
             MatchCollection matches = rx.Matches(text);
 
             //Indices
-            int[] idx = new int[matches.Count];
+            //int[] idx = new int[matches.Count];
 
             // Report on each match.
             int i = 0;
@@ -33,13 +35,14 @@ namespace FiltroInput
             {
                 GroupCollection groups = match.Groups;
 
-                idx[i++] = groups[0].Index;
+                //idx[i++] = groups[0].Index;
+                Console.WriteLine(groups[0]);
 
 
             }
 
 
-            Console.WriteLine("Encontrei {0}", idx.Length);
+            /*Console.WriteLine("Encontrei {0}", idx.Length);
 
             if (idx.Length > 0)
             {
@@ -63,6 +66,7 @@ namespace FiltroInput
             {
                 Console.WriteLine(str);
             }
+            */
             Console.ReadLine();
         }
     }

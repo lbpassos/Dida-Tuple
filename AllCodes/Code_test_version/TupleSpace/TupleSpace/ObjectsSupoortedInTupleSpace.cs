@@ -50,7 +50,7 @@ namespace TupleSpace
 
         public override string ToString()
         {
-            return "DADTestA(" + i1 + "," + "\"" + s1 + "\")";
+            return "DADTestA(" + i1 + "," + s1 + ")";
         }
 
         
@@ -100,7 +100,7 @@ namespace TupleSpace
 
         public override string ToString()
         {
-            return "DADTestB(" + i1 + "," + "\"" + s1 + "\"" +"," + "\"" + i2 + ")";
+            return "DADTestB(" + i1 + "," + s1 + "," + "\"" + i2 + ")";
         }
 
     }
@@ -149,7 +149,7 @@ namespace TupleSpace
 
         public override string ToString()
         {
-            return "DADTestC(" + i1 + "," + "\"" + s1 + "\"" + "," + "\"" + s2 + "\"" + ")";
+            return "DADTestC(" + i1 + "," + s1 + "," + s2 + ")";
         }
 
     }

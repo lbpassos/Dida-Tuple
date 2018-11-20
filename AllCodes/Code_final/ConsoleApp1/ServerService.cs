@@ -9,7 +9,7 @@ namespace Projeto_DAD
     class ServerService : MarshalByRefObject, IServerServices
     {
 
-        private List<object> Tuple_Space = new List<object>();
+        private TupleSpace ts = new TupleSpace(); //Imagem of each server
 
         private static bool Root = false;
         private bool Repeat = false;
@@ -29,27 +29,30 @@ namespace Projeto_DAD
             return Root;
         }
 
-        public void Add(object tuple)
+
+
+        /* SEM CALLBACK
+         */ 
+        public void Add(MyTuple mt)
         {
-            Tuple_Space.Add(tuple);
+            ts.add(mt);
+            Console.WriteLine("ADICIONADO: " + mt);
+            Console.WriteLine("TOTAL DEPOIS DO ADD: " + ts);
         }
 
-        public object Read(object tuple)
+        public object Read(MyTuple mt)
         {
-            foreach (object temp in Tuple_Space)
-            {
-                if (temp.Equals(tuple))
-                {
-                    return temp;
-                }
-            }
-
-            return null;
+            Console.WriteLine("ENCONTRADO: " + ts.read(mt));
+            Console.WriteLine("TOTAL DEPOIS DO READ: " + ts);
+            return ts.read(mt);
         }
 
-        public object Take(object tuple)
+        public object Take(MyTuple mt)
         {
-            throw new NotImplementedException();
+            object o = ts.take(mt);
+            Console.WriteLine("REMOVIDO: " + mt);
+            Console.WriteLine("TOTAL DEPOIS DO TAKE: " + ts);
+            return o;
         }
 
     }

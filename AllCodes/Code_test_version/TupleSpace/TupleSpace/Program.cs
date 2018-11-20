@@ -169,27 +169,83 @@ namespace TupleSpace
 
     }
 
+
+    
+
+
     class Program
     {
+
+        /// <summary>
+        /// s is without <>
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static object GetObjectFromString(string s)
+        {
+            if( s[0]=='\"') //Its a string
+            {
+                s = s.Replace("\"", "");
+                return new StringEmulator(s);
+            }
+            else
+            {
+                int idx = s.IndexOf('(');
+                string obj_stringName = s.Substring(0, idx);
+                string obj_stringValues = s.Substring(idx + 1, (s.Length-1)-(idx + 1) );
+                string[] results = obj_stringValues.Split(',');
+
+                switch (obj_stringName )
+                {
+                    case "DADTestA":
+                        return new DADTestA(Int32.Parse(results[0]), results[1]);
+                    case "DADTestB":
+                        return new DADTestB(Int32.Parse(results[0]), results[1], Int32.Parse(results[2]));
+                    case "DADTestC":
+                        return new DADTestC(Int32.Parse(results[0]), results[1], results[2]);
+                    default:
+                        throw new Exception("Invalid Command: GetObjectFromString");
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             TupleSpace ts = new TupleSpace();
 
 
+            string um = "\"a\"";
+            string dois = "DADTestA(1,\"b\")";
+
+            object[] o1 = new object[2];
+            o1[0] = GetObjectFromString(um);
+            o1[1] = GetObjectFromString(dois);
+            MyTuple tuplo_um = new MyTuple(o1);
+            Console.WriteLine("Tuplo 1:" + tuplo_um);
+
+            um = "\"a\"";
             
+            o1 = new object[1];
+            o1[0] = GetObjectFromString(um);
+            tuplo_um = new MyTuple(o1);
+            Console.WriteLine("Tuplo 2:" + tuplo_um);
 
-            object[] o1 = { "\"a\"", new DADTestA(1, "b") }; //Cria Tuplo <"a",DADTestA(1, "b")>
-            MyTuple um = new MyTuple( o1 );
-            Console.WriteLine("Tuplo 1:" + um);
 
-            ts.add( um );                                                   //Insere no espaço de tuplos
-            Console.WriteLine("Tuplo:" + ts);
+            //object[] o1 = { "\"a\"", new DADTestA(1, "b") }; //Cria Tuplo <"a",DADTestA(1, "b")>
+            //MyTuple um = new MyTuple( o1 );
+            //Console.WriteLine("Tuplo 1:" + um);
 
-            //object[] o2 = { "\"a\"", "DADTestA" }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
-            //object[] o2 = { "\"a\"", new DADTestA(1, "b") }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
-            object[] o2 = { "\"a\"", null }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
-            MyTuple dois = new MyTuple(o2);
-            Console.WriteLine("READ {0}: {1}", dois, ts.read(dois));    //Apanha Tuplo  <"a">
+            //object[] o1 = { "\"a\"", new DADTestA(1, "b") }; //Cria Tuplo <"a",DADTestA(1, "b")>
+            //MyTuple um = new MyTuple(o1);
+
+            //ts.add( um );                                                   //Insere no espaço de tuplos
+            //Console.WriteLine("Tuplo:" + ts);
+
+            //object[] o2 = { "\"a\"", "DADTestA" }; //Procura por tuplos <"a",DADTestA>
+            //object[] o2 = { "\"a\"", new DADTestA(1, "b") }; //procura por  Tuplo <"a",DADTestA(1, "b")>
+            //object[] o2 = { "\"a\"", null }; // procura por todos os tuplos com <"a",null>
+            //MyTuple dois = new MyTuple(o2);
+            //Console.WriteLine("READ {0}: {1}", dois, ts.read(dois));    //Apanha Tuplo  <"a">
 
             /*object[] o2 = { new DADTestA(1, "a"), new DADTestB(1, "c", 2), new DADTestC(1, "b", "d") }; //Cria Tuplo <DADTestA(1, "a"),DADTestB(1, "c", 2),DADTestC(1, "b", "d")>
             MyTuple dois = new MyTuple(o2);
