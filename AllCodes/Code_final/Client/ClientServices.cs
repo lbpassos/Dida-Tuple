@@ -8,7 +8,7 @@ namespace Projeto_DAD
 {
     class ClientServices : MarshalByRefObject, IClientServices
     {
-        public void Begin_Repeat(int repetitions, string command)
+        /*public void Begin_Repeat(int repetitions, string command)
         {
             throw new NotImplementedException();
         }
@@ -22,6 +22,6 @@ namespace Projeto_DAD
         {
             Console.WriteLine("waiting " + milliseconds);
             Thread.Sleep(milliseconds);
-        }
+        }*/
     }
 }

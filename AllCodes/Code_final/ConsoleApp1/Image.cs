@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Projeto_DAD
 {
+    [Serializable]
     class TupleSpace
     {
         List<MyTuple> mySpace;
@@ -13,6 +14,18 @@ namespace Projeto_DAD
         public TupleSpace()
         {
             mySpace = new List<MyTuple>();
+        }
+
+        //Constructor with image
+        public TupleSpace(List<MyTuple> l)
+        {
+            mySpace = l;
+        }
+
+        //Get Image
+        public List<MyTuple> getImage()
+        {
+            return mySpace;
         }
 
         public void add(MyTuple mt)

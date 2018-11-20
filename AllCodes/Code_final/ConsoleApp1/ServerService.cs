@@ -9,7 +9,8 @@ namespace Projeto_DAD
     class ServerService : MarshalByRefObject, IServerServices
     {
 
-        private TupleSpace ts = new TupleSpace(); //Imagem of each server
+        //public static TupleSpace ts = new TupleSpace(); //Imagem of each server
+        private static TupleSpace ts = new TupleSpace();
 
         private static bool Root = false;
         private bool Repeat = false;
@@ -30,9 +31,23 @@ namespace Projeto_DAD
         }
 
 
+        public static void SetTupleSpace(Object img)
+        {
+            ts = (TupleSpace)img;
+        }
+        public static string GetTupleSpaceRepresentation()
+        {
+            return ts.ToString();
+        }
+
+        public Object getImage()
+        {
+            return ts;
+        }
+
 
         /* SEM CALLBACK
-         */ 
+         */
         public void Add(MyTuple mt)
         {
             ts.add(mt);

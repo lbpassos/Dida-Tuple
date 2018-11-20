@@ -56,6 +56,10 @@ namespace Projeto_DAD
         {
             string command = "";
 
+            int port = Int32.Parse(args[0]);
+           // CallbackModule cm = new CallbackModule(port); //Init CallBack Module ********************************
+
+
             //Ler a lista de todos os servidores
             AllServers = new List<string>();
             string[] lines = File.ReadAllLines(path);
@@ -311,6 +315,7 @@ namespace Projeto_DAD
                     {
                         Console.WriteLine("Connected to :" + AllServers[i]);
                         RootServer = AllServers[i];
+
                         Console.WriteLine(RootServer + " is the ROOT Server");
                         RemotingServices.Marshal(cs, "MyRemoteObjectName", typeof(ClientServices));
                         //new Thread(() => PingLoop()).Start();
@@ -358,7 +363,7 @@ namespace Projeto_DAD
                     //Console.WriteLine(e);
                     RemotingServices.Disconnect(cs);
                     //STATE_CLIENT = STATE_CLIENT_ROOT_DISCOVER;
-                    SearchForRootServer(); //Dalta implementar um timeout Provavelmente
+                    SearchForRootServer(); //Falta implementar um timeout Provavelmente
                     break;
                 }
 

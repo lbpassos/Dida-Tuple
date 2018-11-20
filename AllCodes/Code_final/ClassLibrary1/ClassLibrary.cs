@@ -20,17 +20,22 @@ namespace Projeto_DAD
         bool isRoot(); //check if node is root
 
         void Ping();
+
+        Object getImage();
+        
     }
 
 
 
     public interface IClientServices
     {
+        /*
         void Wait(int milliseconds); //Delays the execution of the next command for x milliseconds.
 
         void Begin_Repeat(int repetitions, string command); //Repeats x number of times the commands following this command and before the next end-repeat.It is not possible to have another begin-repeat command before this loop is closed by a end-repeat command.
 
         void End_repeat(); //Closes a repeat loop.
+        */
     }
 
     public interface IPuppetMasterServices

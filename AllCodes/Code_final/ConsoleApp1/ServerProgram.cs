@@ -74,6 +74,10 @@ namespace Projeto_DAD
                                 STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_KEEP_ALIVE;
                                 flag = true;
                                 Console.WriteLine("ROOT is {0}", Server.AllServers[i].UID.AbsoluteUri);
+
+                                ServerService.SetTupleSpace( obj.getImage() ); //get the image of the root
+                                Console.WriteLine("Imagem: ");
+                                Console.WriteLine( ServerService.GetTupleSpaceRepresentation() );
                                 break;
                             }
                             else
@@ -87,7 +91,7 @@ namespace Projeto_DAD
                         {
                             //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: EXCEPTION");
                             Console.WriteLine("DEAD: {0}", Server.AllServers[i].UID.AbsoluteUri);
-                            //Console.WriteLine(e);
+                            Console.WriteLine(e);
                         }
                     }
                     //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: TEST_FLAG");
