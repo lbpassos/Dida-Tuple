@@ -8,20 +8,18 @@ namespace Projeto_DAD
 {
     class ClientServices : MarshalByRefObject, IClientServices
     {
-        /*public void Begin_Repeat(int repetitions, string command)
+        public void sink(MyTuple mt)
         {
-            throw new NotImplementedException();
+            
+            if (mt != null)
+            {
+                Console.WriteLine("(ClientServices) RECEBI: " + mt.ToString());
+            }
+            else
+            {
+                Console.WriteLine("(ClientServices) NADA A RECEBER");
+            }
+            ClientProgram.AnswerIsReceived();
         }
-
-        public void End_repeat()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Wait(int milliseconds)
-        {
-            Console.WriteLine("waiting " + milliseconds);
-            Thread.Sleep(milliseconds);
-        }*/
     }
 }

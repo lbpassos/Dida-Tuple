@@ -1,5 +1,8 @@
 # Log
 
+- **22-11**
+  - SMR done. Needs further testing
+  
 - **8-11**
   - Root Server election done.
   

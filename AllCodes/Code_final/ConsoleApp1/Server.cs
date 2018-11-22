@@ -106,6 +106,7 @@ namespace Projeto_DAD
 
             new Thread(() => Server_thread()).Start();
             new Thread(() => Client_thread()).Start();
+            new Thread(() => ServerService.CheckCommandsInQueue_thread()).Start();
 
             System.Console.WriteLine("I'm server: " + args[1]);
             System.Console.ReadLine();
@@ -134,6 +135,10 @@ namespace Projeto_DAD
             while (true) ;
 
         }
+
+        
+
+        
 
     }
 }

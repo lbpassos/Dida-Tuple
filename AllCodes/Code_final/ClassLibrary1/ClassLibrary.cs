@@ -11,17 +11,22 @@ namespace Projeto_DAD
 {
     public interface IServerServices
     {
-        void Add(MyTuple mt);
+        //void Add(MyTuple mt);
 
-        object Read(MyTuple mt);
+        //object Read(MyTuple mt);
 
-        object Take(MyTuple mt);
+        //object Take(MyTuple mt);
+        //void ProcessCommand(Command c);
 
         bool isRoot(); //check if node is root
 
         void Ping();
 
-        Object getImage();
+        void RX_Command(Command cmd); //Receive Commands do cliente
+        Object[] getImage(); //Request on Init
+        void TakeCommand(Command cmd);//Get Commands from ROOT
+
+        
         
     }
 
@@ -29,14 +34,11 @@ namespace Projeto_DAD
 
     public interface IClientServices
     {
-        /*
-        void Wait(int milliseconds); //Delays the execution of the next command for x milliseconds.
-
-        void Begin_Repeat(int repetitions, string command); //Repeats x number of times the commands following this command and before the next end-repeat.It is not possible to have another begin-repeat command before this loop is closed by a end-repeat command.
-
-        void End_repeat(); //Closes a repeat loop.
-        */
+        //void sink(object o);
+        void sink(MyTuple mt);
     }
+
+    
 
     public interface IPuppetMasterServices
     {
@@ -465,11 +467,13 @@ namespace Projeto_DAD
     {
         private string cmd;
         private object payload;
+        private Uri uri;
 
-        public Command(string command, object tuple)
+        public Command(string command, object tuple, Uri add)
         {
             cmd = command;
             payload = tuple;
+            uri = add;
         }
 
         public string GetCommand()
@@ -480,6 +484,11 @@ namespace Projeto_DAD
         public object GetPayload()
         {
             return payload;
+        }
+
+        public Uri GetUriFromSender()
+        {
+            return uri;
         }
     }
 }

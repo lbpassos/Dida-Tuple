@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,32 +11,25 @@ namespace Projeto_DAD
     class TupleSpace
     {
         List<MyTuple> mySpace;
+       
 
         public TupleSpace()
         {
             mySpace = new List<MyTuple>();
         }
-
         //Constructor with image
         public TupleSpace(List<MyTuple> l)
         {
             mySpace = l;
         }
 
-        //Get Image
-        public List<MyTuple> getImage()
-        {
-            return mySpace;
-        }
 
-        public void add(MyTuple mt)
+        public void Add(MyTuple mt)
         {
             mySpace.Add(mt);
         }
 
-
-
-        public object read(MyTuple mt)
+        public object Read(MyTuple mt)
         {
 
             for (int i = 0; i < mySpace.Count; ++i)
@@ -46,12 +40,11 @@ namespace Projeto_DAD
                 }
 
             }
-            return false;
+            return null;
         }
 
-        public object take(MyTuple mt)
+        public object Take(MyTuple mt)
         {
-
             for (int i = 0; i < mySpace.Count; ++i)
             {
                 if (mySpace[i].Equals(mt)) //Finds the first one. Returns
@@ -63,7 +56,13 @@ namespace Projeto_DAD
                 }
 
             }
-            return false;
+            return null;
+        }
+
+        //Get Current Image
+        public List<MyTuple> GetImage()
+        {
+            return mySpace;
         }
 
         public override string ToString()

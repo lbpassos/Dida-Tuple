@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Threading;
 using System.Collections;
-
+using System.Runtime.Remoting.Messaging;
 
 namespace Projeto_DAD
 {
@@ -75,7 +75,12 @@ namespace Projeto_DAD
                                 flag = true;
                                 Console.WriteLine("ROOT is {0}", Server.AllServers[i].UID.AbsoluteUri);
 
-                                ServerService.SetTupleSpace( obj.getImage() ); //get the image of the root
+                                object[] imageFromRoot = obj.getImage();
+                                ServerService.SetTupleSpace(new TupleSpace( (List<MyTuple>)imageFromRoot[0]) ); //Novo tuplespace criado
+                                ServerService.SetCommunicationLayer((Queue)imageFromRoot[1], (List<Command>)imageFromRoot[2]);
+
+
+                                //ServerService.SetTupleSpace( obj.getImage() ); //get the image of the root
                                 Console.WriteLine("Imagem: ");
                                 Console.WriteLine( ServerService.GetTupleSpaceRepresentation() );
                                 break;
@@ -150,9 +155,57 @@ namespace Projeto_DAD
             }
         }
 
+        public delegate void RemoteAsyncDelegate(Command c);
+        public static void OurRemoteAsyncCallBack(IAsyncResult ar)
+        {
+            // Alternative 2: Use the callback to get the return value
+            RemoteAsyncDelegate del = (RemoteAsyncDelegate)((AsyncResult)ar).AsyncDelegate;
+            del.EndInvoke(ar);
+            Console.WriteLine("\r\n**SUCCESS**: Result of the remote AsyncCallBack: ");
+
+            return;
+        }
+
+        /// <summary>
+        /// Send Commands to all the others Servers in an asyncronous way
+        /// </summary>
+        /// <param name="cmd"></param>
+        public static void UpdateAll(Command cmd)
+        {
+            for (int i = 0; i < Server.AllServers.Count; i++)
+            {
+                if (Server.AllServers[i].ID == Server.My_Identification.ID) //Avoid sending to himself
+                {
+                    continue;
+                }
+                try
+                {
+                    ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
+                    RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(obj.TakeCommand);
+                    AsyncCallback RemoteCallback = new AsyncCallback(OurRemoteAsyncCallBack);
+                    IAsyncResult RemAr = RemoteDel.BeginInvoke(cmd, RemoteCallback, null);
+
+                    Console.WriteLine("-------UpdateAll-------: {0}", Server.AllServers[i].UID.AbsoluteUri);
 
 
-        private void PingLoop()
+                }
+                catch (Exception e)
+                {
+                    //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: EXCEPTION");
+                    Console.WriteLine("-------UpdateAll------- DEAD: {0}", Server.AllServers[i].UID.AbsoluteUri);
+                    //Console.WriteLine(e);
+                }
+
+            }
+        }
+
+
+
+
+
+
+
+            private void PingLoop()
         {
             while (true)
             {
@@ -192,5 +245,7 @@ namespace Projeto_DAD
             }
 
         }
+
+        
     }
 }
