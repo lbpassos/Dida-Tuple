@@ -26,7 +26,7 @@ namespace Projeto_DAD
             ChannelServices.RegisterChannel(channel, true);    
  
             RemotingConfiguration.RegisterWellKnownServiceType(
-                typeof(MyRemoteObject),
+                typeof(PCSService),
                 "MyRemoteObjectName",
                 WellKnownObjectMode.Singleton);
 

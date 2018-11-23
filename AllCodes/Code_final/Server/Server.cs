@@ -10,6 +10,7 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace Projeto_DAD
 {
@@ -47,6 +48,8 @@ namespace Projeto_DAD
 
         private static TcpChannel channel;
 
+        private static int delay_messages;
+
         static void Main(string[] args)
         {
             int id;
@@ -61,7 +64,10 @@ namespace Projeto_DAD
 
             }
 
-            id = Int32.Parse(args[0]);
+            id = Int32.Parse(args[0].Substring(1)); //catch number from the 1 position
+
+ 
+            
             try
             {
                 uri = new Uri(args[1]);
@@ -75,7 +81,8 @@ namespace Projeto_DAD
 
             min_delay = Int32.Parse(args[2]);
             max_delay = Int32.Parse(args[3]);
-
+            Random rnd = new Random();
+            delay_messages = rnd.Next(min_delay, max_delay+1);
 
             //open file with database of all Servers in the system
             AllServers = new List<EachServer>();

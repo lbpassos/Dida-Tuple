@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,12 +9,17 @@ namespace Projeto_DAD
 {
     class ClientServices : MarshalByRefObject, IClientServices
     {
+        private bool MustFreeze = false;
+
         public void sink(MyTuple mt)
         {
-            
+
+            while (MustFreeze == true) ; //Freeze
+
             if (mt != null)
             {
                 Console.WriteLine("(ClientServices) RECEBI: " + mt.ToString());
+                
             }
             else
             {
@@ -21,5 +27,18 @@ namespace Projeto_DAD
             }
             ClientProgram.AnswerIsReceived();
         }
+
+        public void freeze()
+        {
+            MustFreeze = true;
+        }
+
+        public void unfreeze()
+        {
+            MustFreeze = false;
+        }
+
     }
+
+   
 }

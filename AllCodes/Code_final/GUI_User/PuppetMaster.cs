@@ -20,27 +20,36 @@ namespace Projeto_DAD
 {
     public partial class PuppetMaster : Form
     {
-        private Dictionary<string, MyRemoteObject> PCS_Url; //address PCS
-        private const int port = 1000; //Port in the PCS
+        //private Dictionary<string, IPCSServices> PCS_Url; //address PCS
+        //private Dictionary<string, IPCSServices> PCS_ClientUrl; //address PCS
+
+        //private const int port_PCS = 1000; //Port in the PCS
+        private const string PCS_Local_address= "tcp://localhost:10000/MyRemoteObjectName";
 
         private string typeOfExecution;
         private string filePath;
 
-        private Dictionary<string, MyRemoteObject> PCS_ClientUrl; //address PCS
+        
 
 
         private List<string> commandList = new List<string>();
 
 
 
-        //private TcpChannel channel;
-        //private MyRemoteObject obj;
+        
+        private TcpChannel channel;
+        private IPCSServices ipcs;
+
 
         public PuppetMaster()
         {
             InitializeComponent();
-            PCS_Url = new Dictionary<string, MyRemoteObject>();
-            PCS_ClientUrl = new Dictionary<string, MyRemoteObject>();
+            //PCS_Url = new Dictionary<string, IPCSServices>();
+            //PCS_ClientUrl = new Dictionary<string, IPCSServices>();
+            channel = new TcpChannel();
+            ChannelServices.RegisterChannel(channel, true);
+            ipcs = (IPCSServices)Activator.GetObject(typeof(IPCSServices), PCS_Local_address);
+
         }
 
         private void button_Browse_Click(object sender, EventArgs e)
@@ -121,103 +130,108 @@ namespace Projeto_DAD
                 return;
 
             string command = words[0];
-
-
-            string url_toSend;
-
-            MyRemoteObject ipcs;
-     
-            
-                switch (command) { //test command name
+                 
+            switch (command) { //test command name
                 case "Server":  //Start Server
                     string server_id = words[1];
                     string url = words[2];
                     string min_delay = words[3];
                     string max_delay = words[4];
 
-                    url_toSend = "tcp://" + url + ":" + port + "/MyRemoteObjectName";
-
                     if ( words.Length == 5 )
                     {
+
                         try
                         {
-                            //test URL
-
-                            try
-                            {
-                                ipcs = PCS_Url[server_id]; //if already registered start
-                            }
-                            catch (KeyNotFoundException e)
-                            {
-                                
-                                Console.WriteLine("Connecting to {0}", url);
-
-                                TcpChannel channel = new TcpChannel(new Random().Next(8000, 9000));
-                                ChannelServices.RegisterChannel(channel, true);
-
-                                ipcs = (MyRemoteObject)Activator.GetObject(typeof(MyRemoteObject), url_toSend);
-                                //pcs.Print("Hello there :)");
-                                PCS_Url.Add(url, ipcs);
-                                
-                            }
-
-                            ipcs.StartServer(server_id, min_delay, max_delay);
-                           
+                            ipcs.StartServer(server_id, url, min_delay, max_delay);
                         }
-                        catch (UriFormatException e)
+                        catch(Exception e)
                         {
-                            Console.WriteLine("Invalid PCS_URL: {0}", e);
+                            Console.WriteLine("PCS is DOWN");
                         }
-
-                    }
+                    }                       
                     break;
                 case "Client":  //Start Client
+
                     string client_id = words[1];
                     string url_client = words[2];
                     string scriptFile = words[3];
-
-                    url_toSend = "tcp://" + url_client + ":" + port + "/MyRemoteObjectName";
-
+                   
                     if (words.Length == 4)
                     {
                         try
                         {
-                            //testc URI
-                            try
-                            {
-                                ipcs = PCS_ClientUrl[client_id]; //if already registered, start
-                            }
-                            catch (KeyNotFoundException e)
-                            {
-
-                                Console.WriteLine("Connecting to {0}", url_client);
-
-                                TcpChannel channel = new TcpChannel(new Random().Next(7000, 8000));
-                                //ChannelServices.RegisterChannel(channel, true);
-
-                                ipcs = (MyRemoteObject)Activator.GetObject(typeof(MyRemoteObject), url_toSend);
-                                //pcs.Print("Hello there :)");
-                                PCS_ClientUrl.Add(url_client, ipcs);
-
-                            }
-
                             ipcs.StartClient(client_id, url_client, scriptFile);
-
                         }
-                        catch (UriFormatException e)
+                        catch(Exception e)
                         {
-                            Console.WriteLine("Invalid PCS_URL: {0}", e);
+                            Console.WriteLine("PCS is DOWN");
                         }
                     }
                     break;
-                
+                case "Status":
+                    if (words.Length == 1)
+                    {
+                        try
+                        {
+                            ipcs.Status();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("PCS is DOWN");
+                        }
+                    }
+                    break;
+                case "Freeze":
+                    string proc = words[1];
+
+                    if (words.Length == 2)
+                    {
+                        try
+                        {
+                            ipcs.Freeze(proc);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("PCS is DOWN");
+                        }
+                    }
+                    break;
+                case "Unfreeze":
+                    string proc_ = words[1];
+
+                    if (words.Length == 2)
+                    {
+                        try
+                        {
+                            ipcs.Unfreeze(proc_);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("PCS is DOWN");
+                        }
+                    }
+                    break;
+                case "Crash":
+                    string _proc = words[1];
+
+                    if (words.Length == 2)
+                    {
+                        try
+                        {
+                            ipcs.Crash(_proc);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("PCS is DOWN");
+                        }
+                    }
+                    break;
+
                 default:
                     Console.WriteLine("Invalid Command");
                     break;
             }
         }// end_checkline
-
-        
-
     }
 }

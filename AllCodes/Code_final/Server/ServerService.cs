@@ -13,7 +13,9 @@ namespace Projeto_DAD
         private static TupleSpace ts = new TupleSpace();
         private static CommunicationLayer commLayer = new CommunicationLayer();
         private static bool Root = false;
-        //new Thread(() => CheckCommandsInQueue_thread()).Start();
+        private static bool MustFreeze = false;
+
+        private static int DelayMessagesTime;
 
 
 
@@ -44,8 +46,10 @@ namespace Projeto_DAD
             return o;
         }
 
-        public void RX_Command(Command cmd) //
+        public void RX_Command(Command cmd) // Get Commands from clients
         {
+            Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
+
             commLayer.InsertCommand(cmd);
             if (Root == true) //Only the root server send updates
             {
@@ -55,6 +59,7 @@ namespace Projeto_DAD
 
         public void TakeCommand(Command cmd)
         {//Get Commands from ROOT
+            Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
             commLayer.InsertCommand(cmd);
             Console.WriteLine("(ServerService) Comando no Queue: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
         }
@@ -75,14 +80,17 @@ namespace Projeto_DAD
 
         public static void CheckCommandsInQueue_thread()
         {
-            while (true)
+            while(true) 
             {
-                Thread.Sleep(50);
+                while (MustFreeze == true) ; //FREEZE ****************************
+                Thread.Sleep(50);//Min time to check commands
                 if (commLayer.GetQueueSize() > 0) //if there is commands
                 {
                     Command cmd = commLayer.RemoveFromCommandQueue();
                     MyTuple payload = (MyTuple)cmd.GetPayload();
                     Object tmp;
+
+                    
 
                     switch (cmd.GetCommand())
                     {
@@ -174,7 +182,21 @@ namespace Projeto_DAD
             }
         }
 
-       
+        public void freeze()
+        {
+            MustFreeze = true;
+        }
+
+        public void unfreeze()
+        {
+            MustFreeze = false;
+        }
+
+        public static void SetDelayMessageTime(int delay_ms)
+        {
+            DelayMessagesTime = delay_ms;
+        }
+
     }
 
 }

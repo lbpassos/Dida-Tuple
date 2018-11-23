@@ -33,7 +33,8 @@ namespace Projeto_DAD
 
             }
 
-            id = Int32.Parse(args[0]);
+            id = Int32.Parse(args[0].Substring(1)); //catch number from the 1 position
+
             try
             {
                 uri = new Uri(args[1]);
@@ -54,8 +55,7 @@ namespace Projeto_DAD
 
             new Thread(() => ClientCallbck_thread()).Start();
             new Thread(() => Client_thread(uri)).Start();
-
-
+           
 
         }
 
