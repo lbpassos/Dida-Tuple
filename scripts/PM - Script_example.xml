@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <commands>
 	<type>Sequence</type>
-	<command>Server 1 tcp://localhost:1200 0 0</command>
-	<command>Client 1 tcp://localhost:1300 C:/Users/bruno/source/repos/Dida-Tuple/scripts/Client-Script_example.xml</command> 
+	<command>Server s1 tcp://localhost:1200 0 0</command>
+	<command>Client c1 tcp://localhost:1300 scripts/Client-Script_example.xml</command> 
 </commands>
