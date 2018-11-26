@@ -33,7 +33,9 @@ namespace Projeto_DAD
 
             }
 
-            id = Int32.Parse(args[0]); //catch number from the 1 position
+            Console.WriteLine("olaaa" + args[0]);
+
+            id = Int32.Parse(args[0].Substring(1)); //catch number from the 1 position
 
             try
             {
