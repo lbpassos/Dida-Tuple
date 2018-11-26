@@ -96,7 +96,7 @@ namespace Projeto_DAD
                         {
                             //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: EXCEPTION");
                             Console.WriteLine("DEAD: {0}", Server.AllServers[i].UID.AbsoluteUri);
-                            Console.WriteLine(e);
+                            //Console.WriteLine(e);
                         }
                     }
                     //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: TEST_FLAG");

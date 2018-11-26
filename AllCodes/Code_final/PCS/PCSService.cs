@@ -40,6 +40,7 @@ namespace Projeto_DAD
                     p.StartInfo.Arguments = serverID + " " + url + " " + min_delay + " " + max_delay;
                     p.Start();
                     ServerProcess.Add(ProcessServer, p);
+                    Console.WriteLine("Starting the server");
 
                 }
                 catch (InvalidOperationException) { Console.WriteLine("FileName specified is not valid"); }

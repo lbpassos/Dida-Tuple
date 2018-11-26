@@ -81,8 +81,8 @@ namespace Projeto_DAD
                 textBox_Browse.Enabled = false;
                 foreach (string command in commandList)
                 {
-                    checkLine(command);
                     Console.WriteLine(command);
+                    checkLine(command);
                 }
             }
             else if (typeOfExecution.Equals("Step"))
