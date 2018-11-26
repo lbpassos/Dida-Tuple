@@ -12,15 +12,10 @@ namespace Projeto_DAD
 
         private static TupleSpace ts = new TupleSpace();
         private static CommunicationLayer commLayer = new CommunicationLayer();
-        private static bool Root = false;
         private static bool MustFreeze = false;
+        private static bool Root = false;
 
         private static int DelayMessagesTime;
-
-
-
-
-
 
         public static void setRoot(bool value)
         {
@@ -88,97 +83,10 @@ namespace Projeto_DAD
                 {
                     Command cmd = commLayer.RemoveFromCommandQueue();
                     MyTuple payload = (MyTuple)cmd.GetPayload();
-                    Object tmp;
 
-                    
+                    new Thread(() => DealWithRequest_thread(cmd, payload)).Start();
 
-                    switch (cmd.GetCommand())
-                    {
-                        case "read":
-                            tmp = ts.Read(payload);
-                            MyTuple a = tmp as MyTuple;
-
-                            Console.WriteLine("Imagem: ");
-                            Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
-
-                            if (a == null) //object does not exist in the tuple space so we put in backlog
-                            {
-                                commLayer.InsertInBackLog(cmd);
-                                Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
-                            }
-                            else
-                            {
-                                GiveBackResult(cmd.GetUriFromSender(), a);
-                            }
-                            break;
-                        case "add":
-                            ts.Add(payload);
-
-                            Console.WriteLine("Imagem: ");
-                            Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
-
-                            GiveBackResult(cmd.GetUriFromSender(), null);
-                            MyTuple a1;
-                            //serach in the backlog
-                            for (int i=0; i< commLayer.GetBackLogSize(); ++i)
-                            {
-                                Command Command_tmp = commLayer.GetBackLogCommand(i);
-                                if (Command_tmp.GetCommand().Equals("read"))
-                                {
-                                    tmp = ts.Read((MyTuple)Command_tmp.GetPayload());
-                                    a1 = tmp as MyTuple;
-                                    if (a1 != null)
-                                    {
-                                        commLayer.RemoveFromBackLog(i);
-                                        i = -1;
-                                        Console.WriteLine("(ServerService) Comando Atendido e Removido do Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
-                                        GiveBackResult(Command_tmp.GetUriFromSender(), a1);
-                                    }
-                                }
-                                else
-                                {
-                                    if (Command_tmp.GetCommand().Equals("take"))
-                                    {
-                                        tmp = ts.Take((MyTuple)Command_tmp.GetPayload());
-                                        a1 = tmp as MyTuple;
-                                        if (a1 != null) //test if is a MyTuple
-                                        {
-                                            commLayer.RemoveFromBackLog(i);
-                                            i = -1;
-                                            GiveBackResult(Command_tmp.GetUriFromSender(), a1);
-                                        }
-
-                                    }
-                                }
-                            }
-                            break;
-                        case "take":
-                            tmp = ts.Take(payload);
-                            MyTuple a2 = tmp as MyTuple;
-                            if (a2 == null) //object does not exist in the tuple space so we put in backlog
-                            {
-                                commLayer.InsertInBackLog(cmd);
-                                Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
-                            }
-                            else
-                            {
-                                Console.WriteLine("Imagem: ");
-                                Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
-
-                                GiveBackResult(cmd.GetUriFromSender(), a2);
-                            }
-                            break;
-                    }
                 }
-            }
-        }
-
-        private static void GiveBackResult(Uri uri, MyTuple mt)
-        {
-            if (Root == true) //Only sends back to client if is ROOT SERVER
-            {
-                IClientServices obj = (IClientServices)Activator.GetObject(typeof(IClientServices), uri.AbsoluteUri + "MyRemoteClient");
-                obj.sink(mt);
             }
         }
 
@@ -197,6 +105,99 @@ namespace Projeto_DAD
             DelayMessagesTime = delay_ms;
         }
 
+        public static void DealWithRequest_thread(Command cmd, MyTuple payload)
+        {
+            Object tmp;
+
+            switch (cmd.GetCommand())
+            {
+                case "read":
+                    tmp = ts.Read(payload);
+                    MyTuple a = tmp as MyTuple;
+
+                    Console.WriteLine("Imagem: ");
+                    Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
+
+                    if (a == null) //object does not exist in the tuple space so we put in backlog
+                    {
+                        commLayer.InsertInBackLog(cmd);
+                        Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                    }
+                    else
+                    {
+                        GiveBackResult(cmd.GetUriFromSender(), a);
+                    }
+                    break;
+                case "add":
+                    ts.Add(payload);
+
+                    Console.WriteLine("Imagem: ");
+                    Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
+
+                    GiveBackResult(cmd.GetUriFromSender(), null);
+                    MyTuple a1;
+                    //serach in the backlog
+                    for (int i = 0; i < commLayer.GetBackLogSize(); ++i)
+                    {
+                        Command Command_tmp = commLayer.GetBackLogCommand(i);
+                        if (Command_tmp.GetCommand().Equals("read"))
+                        {
+                            tmp = ts.Read((MyTuple)Command_tmp.GetPayload());
+                            a1 = tmp as MyTuple;
+                            if (a1 != null)
+                            {
+                                commLayer.RemoveFromBackLog(i);
+                                i = -1;
+                                Console.WriteLine("(ServerService) Comando Atendido e Removido do Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                                GiveBackResult(Command_tmp.GetUriFromSender(), a1);
+                            }
+                        }
+                        else
+                        {
+                            if (Command_tmp.GetCommand().Equals("take"))
+                            {
+                                tmp = ts.Take((MyTuple)Command_tmp.GetPayload());
+                                a1 = tmp as MyTuple;
+                                if (a1 != null) //test if is a MyTuple
+                                {
+                                    commLayer.RemoveFromBackLog(i);
+                                    i = -1;
+                                    GiveBackResult(Command_tmp.GetUriFromSender(), a1);
+                                }
+
+                            }
+                        }
+                    }
+                    break;
+                case "take":
+                    tmp = ts.Take(payload);
+                    MyTuple a2 = tmp as MyTuple;
+                    if (a2 == null) //object does not exist in the tuple space so we put in backlog
+                    {
+                        commLayer.InsertInBackLog(cmd);
+                        Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                    }
+                    else
+                    {
+                        Console.WriteLine("Imagem: ");
+                        Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
+
+                        GiveBackResult(cmd.GetUriFromSender(), a2);
+                    }
+                    break;
+            }
+        }
+
+
+        private static void GiveBackResult(Uri uri, MyTuple mt)
+        {
+            if (Root == true) //Only sends back to client if is ROOT SERVER
+            {
+                IClientServices obj = (IClientServices)Activator.GetObject(typeof(IClientServices), uri.AbsoluteUri + "MyRemoteClient");
+                obj.sink(mt);
+            }
+        }
     }
+
 
 }

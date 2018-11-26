@@ -76,10 +76,4 @@ namespace Projeto_DAD
     }
 
 
-    //Thread que vai lidar com os pedidos na queue
-    class DealWithRequest
-    {
-
-    }
-
 }
