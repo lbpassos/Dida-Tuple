@@ -1,4 +1,6 @@
 <?xml version="1.0" ?>
 <commands>
-	<add <"a",DADTestA(1,"b")> />
+	<command>add &gt;"a",DADTestA(1,"b")&lt;</command>
+	<command>add &gt;"f",DADTestB(2,"c",4)&lt;</command>
+	<command>read &gt;"a",DADTestA(1,"b")&lt;</command>
 </commands>
