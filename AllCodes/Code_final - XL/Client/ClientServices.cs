@@ -11,7 +11,7 @@ namespace Projeto_DAD
     {
         private bool MustFreeze = false;
 
-        public void sink(MyTuple mt)
+        public void sink(MyTuple mt) //Receive answers
         {
 
             while (MustFreeze == true) ; //Freeze

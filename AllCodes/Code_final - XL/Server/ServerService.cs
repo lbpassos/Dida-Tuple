@@ -11,192 +11,139 @@ namespace Projeto_DAD
     {
 
         private static TupleSpace ts = new TupleSpace();
-        private static CommunicationLayer commLayer = new CommunicationLayer();
+       // private static CommunicationLayer commLayer = new CommunicationLayer();
         private static bool MustFreeze = false;
-        private static bool Root = false;
-
+        //private static bool Root = false;
         private static int DelayMessagesTime;
 
-        public static void setRoot(bool value)
-        {
-            Root = value;
-        }
+
+        /* XL */
+        private static CommunicationLayerReplica CommLayer_forReplica = new CommunicationLayerReplica(); //Replica channel
 
         public void Ping()
         {
             return;
         }
 
-        public bool isRoot()
+        // ====================================================================================================
+        // Services for other Replicas TSS
+        // ====================================================================================================
+        public void RX_ReplicaCommand(object cmd) //Receive commands from other replicas
         {
-            return Root;
-        }
-
-        public Object[] getImage()
-        {
-            Object[] o = new Object[3];
-            o[0] = ts.GetImage();
-            o[1] = commLayer.GetQueue();
-            o[2] = commLayer.GetBackLog();
-            return o;
-        }
-
-        public void RX_Command(Command cmd) // Get Commands from clients
-        {
-            Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
-
-            commLayer.InsertCommand(cmd);
-            if (Root == true) //Only the root server send updates
+            CommandReplicas a = cmd as CommandReplicas;
+            if (a == null)
             {
-                ServerProgram.UpdateAll(cmd);
+                return;
             }
-        }
-
-        public void TakeCommand(Command cmd)
-        {//Get Commands from ROOT
             Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
-            commLayer.InsertCommand(cmd);
-            Console.WriteLine("(ServerService) Comando no Queue: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+            CommLayer_forReplica.InsertCommand(a);
+
         }
 
-        public static void SetTupleSpace(Object img)
+        public static void CheckCommandsInQueueFromReplica_thread() //Check commands send by the replicas
         {
-            ts = (TupleSpace)img;
-        }
-        public static string GetTupleSpaceRepresentation()
-        {
-            return ts.ToString();
-        }
-        public static void SetCommunicationLayer(Queue q, List<Command> l)
-        {
-            commLayer.InitFieds(q, l);
-        }
-
-
-        public static void CheckCommandsInQueue_thread()
-        {
-            while(true) 
+            while (true)
             {
                 while (MustFreeze == true) ; //FREEZE ****************************
                 Thread.Sleep(50);//Min time to check commands
-                if (commLayer.GetQueueSize() > 0) //if there is commands
+                if (CommLayer_forReplica.GetQueueSize() > 0) //if there is commands
                 {
-                    Command cmd = commLayer.RemoveFromCommandQueue();
-                    MyTuple payload = (MyTuple)cmd.GetPayload();
+                    CommandReplicas cmd = CommLayer_forReplica.RemoveFromCommandQueue();
 
-                    new Thread(() => DealWithRequest_thread(cmd, payload)).Start();
+                    new Thread(() => DealWithRequestReplicaCommand_thread(cmd)).Start(); //Launch thread to attend command
 
                 }
             }
         }
 
-        public void freeze()
-        {
-            MustFreeze = true;
-        }
-
-        public void unfreeze()
-        {
-            MustFreeze = false;
-        }
-
-        public static void SetDelayMessageTime(int delay_ms)
-        {
-            DelayMessagesTime = delay_ms;
-        }
-
-        public static void DealWithRequest_thread(Command cmd, MyTuple payload)
+        /// <summary>
+        /// Process Command received from the client
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="payload"></param>
+        public static void DealWithRequestReplicaCommand_thread(CommandReplicas cmd)
         {
             Object tmp;
-
+            View v = null;
             switch (cmd.GetCommand())
             {
-                case "read":
-                    tmp = ts.Read(payload);
-                    MyTuple a = tmp as MyTuple;
-
-                    Console.WriteLine("Imagem: ");
-                    Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
-
-                    if (a == null) //object does not exist in the tuple space so we put in backlog
+                case "INVITATION":
+                    v = cmd.GetProposedView();
+                    if (v.GetSequence() <= ServerProgram.GetCurrentViewID().GetSequence())//Reject message if Sequence is less or equal than CurrentView
                     {
-                        commLayer.InsertInBackLog(cmd);
-                        Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                        GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("REFUSE", ServerProgram.GetCurrentViewID(), null, null));
                     }
                     else
                     {
-                        GiveBackResult(cmd.GetUriFromSender(), a);
+                        GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("ACCEPTANCE", ServerProgram.GetCurrentViewID(), ts, ServerProgram.GetMyAddress()));
                     }
                     break;
-                case "add":
-                    ts.Add(payload);
-
-                    Console.WriteLine("Imagem: ");
-                    Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
-
-                    GiveBackResult(cmd.GetUriFromSender(), null);
-                    MyTuple a1;
-                    //serach in the backlog
-                    for (int i = 0; i < commLayer.GetBackLogSize(); ++i)
+                case "ACCEPTANCE":
+                    v = cmd.GetProposedView();
+                    if (v.GetSequence() > ServerProgram.GetCurrentViewID().GetSequence())//Accepts mesaage if Sequence > currentViewID
                     {
-                        Command Command_tmp = commLayer.GetBackLogCommand(i);
-                        if (Command_tmp.GetCommand().Equals("read"))
-                        {
-                            tmp = ts.Read((MyTuple)Command_tmp.GetPayload());
-                            a1 = tmp as MyTuple;
-                            if (a1 != null)
-                            {
-                                commLayer.RemoveFromBackLog(i);
-                                i = -1;
-                                Console.WriteLine("(ServerService) Comando Atendido e Removido do Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
-                                GiveBackResult(Command_tmp.GetUriFromSender(), a1);
-                            }
-                        }
-                        else
-                        {
-                            if (Command_tmp.GetCommand().Equals("take"))
-                            {
-                                tmp = ts.Take((MyTuple)Command_tmp.GetPayload());
-                                a1 = tmp as MyTuple;
-                                if (a1 != null) //test if is a MyTuple
-                                {
-                                    commLayer.RemoveFromBackLog(i);
-                                    i = -1;
-                                    GiveBackResult(Command_tmp.GetUriFromSender(), a1);
-                                }
-
-                            }
-                        }
+                        ServerProgram.SetCurrentViewID(v);//Update my view
+                        ts = cmd.GetTSS(); //Update TSS
+                        GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("COMMIT", ServerProgram.GetCurrentViewID(), ts, ServerProgram.GetMyAddress()));
                     }
                     break;
-                case "take":
-                    tmp = ts.Take(payload);
-                    MyTuple a2 = tmp as MyTuple;
-                    if (a2 == null) //object does not exist in the tuple space so we put in backlog
-                    {
-                        commLayer.InsertInBackLog(cmd);
-                        Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
-                    }
-                    else
-                    {
-                        Console.WriteLine("Imagem: ");
-                        Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
-
-                        GiveBackResult(cmd.GetUriFromSender(), a2);
-                    }
+                case "COMMIT":
+                    ServerProgram.SetCurrentViewID(v);//Update my view
+                    ts = cmd.GetTSS(); //Update TSS
+                    break;
+                case "REFUSE":
                     break;
             }
         }
 
 
-        private static void GiveBackResult(Uri uri, MyTuple mt)
+        public void SinkFromReplicas(object cmd) //Receive answers
         {
-            if (Root == true) //Only sends back to client if is ROOT SERVER
+
+            CommandReplicas a = cmd as CommandReplicas;
+            if (a == null)
             {
-                IClientServices obj = (IClientServices)Activator.GetObject(typeof(IClientServices), uri.AbsoluteUri + "MyRemoteClient");
-                obj.sink(mt);
+                return;
             }
+
+            while (MustFreeze == true) ; //Freeze
+            ServerProgram.InsertCommand(a);
+
+            /*if (mt != null)
+            {
+                Console.WriteLine("(ClientServices) RECEBI: " + mt.ToString());
+
+            }
+            else
+            {
+                Console.WriteLine("(ClientServices) NADA A RECEBER");
+            }
+            ClientProgram.AnswerIsReceived();*/
+
         }
+
+        private static void GiveBackResultToReplica(Uri uri, CommandReplicas cm)
+        {
+
+            IServerServices obj = (IServerServices)Activator.GetObject(typeof(IServerServices), uri.AbsoluteUri + "MyRemoteClient");
+            obj.SinkFromReplicas(cm);
+
+        }
+        // ====================================================================================================
+        // END Services for other Replicas TSS
+        // ====================================================================================================
+
+        /* END XL */
+
+        public void RX_Command(Command cmd) { } //Receive Commands do cliente
+        public Object[] getImage() { return null; } //Request on Init
+        public void TakeCommand(Command cmd) { }//Get Commands from ROOT
+
+        public void freeze() { }
+        public void unfreeze() { }
+
+
+
     }
 
 

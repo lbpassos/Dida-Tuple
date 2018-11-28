@@ -112,8 +112,8 @@ namespace Projeto_DAD
             ChannelServices.RegisterChannel(channel, false);
 
             new Thread(() => Server_thread()).Start();
-            new Thread(() => Client_thread()).Start();
-            new Thread(() => ServerService.CheckCommandsInQueue_thread()).Start();
+           //new Thread(() => Client_thread()).Start();
+           //new Thread(() => ServerService.CheckCommandsInQueue_thread()).Start();
 
             System.Console.WriteLine("I'm server: " + args[1]);
             System.Console.ReadLine();
@@ -121,10 +121,7 @@ namespace Projeto_DAD
 
         public static void Server_thread()
         {
-            //TcpChannel channel = new TcpChannel(uri.Port);
-            //ChannelServices.RegisterChannel(channel, true);
-
-
+            
             RemotingConfiguration.RegisterWellKnownServiceType(
                 typeof(ServerService),
                 "MyRemoteObjectName",
@@ -134,10 +131,10 @@ namespace Projeto_DAD
 
         }
 
-        public static void Client_thread()
+        public static void Client_thread(Uri uri) //Client in Server
         {
 
-            new ServerProgram();
+            new ServerProgram(uri);
 
             while (true) ;
 

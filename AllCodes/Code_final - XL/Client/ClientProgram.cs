@@ -29,6 +29,12 @@ namespace Projeto_DAD
 
         private int STATE_CLIENT = STATE_CLIENT_ROOT_DISCOVER;
 
+
+        private const int STATE_COMMAND = 0;
+        private const int STATE_WAIT_FOR_REPLY_READ = 1;
+        private int STATE_EXECUTE = STATE_COMMAND;
+        private int TIMEOUT_FOR_READ = 5000; //5 s
+
         private bool START_CICLE = false;
         private int NumberOfCycles;
         private List<Command> CommandsInCycle = new List<Command>();
@@ -71,11 +77,50 @@ namespace Projeto_DAD
             BlockUntilAnswer = true;
         }
 
+        /// <summary>
+        /// Execute the command. Sends to Server
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="t"></param>
         private void Execute(string command, MyTuple t)
         {
-            Console.WriteLine("EXECUTAR");
+            /*Console.WriteLine("EXECUTAR");
+            Command c;// = new Command(command, t, MyAddress);
+            Stopwatch sw = new Stopwatch();
+
             while (true)
             {
+                switch (STATE_EXECUTE)
+                {
+                    case STATE_COMMAND:
+                        switch (command)
+                        {
+                            case "read":
+                                for (int i = 0; i < Server.AllServers.Count; i++)
+                                {
+                                    
+                                }
+                                    //ss.RX_Command(c);
+                                STATE_EXECUTE = STATE_WAIT_FOR_REPLY_READ;
+                                break;
+                        }
+                        break;
+                    case STATE_WAIT_FOR_REPLY_READ:
+                        if(BlockUntilAnswer == true)
+                        {
+                            return; //Answer received
+
+                        }
+                        if (sw.ElapsedMilliseconds > TIMEOUT_FOR_READ)
+                        {
+                            STATE_EXECUTE = STATE_COMMAND; //No reply was received. send again
+                            break;
+                        }
+                        break;
+                }
+
+
+
                 try
                 {
                     Command c = new Command(command, t, MyAddress);
@@ -100,7 +145,7 @@ namespace Projeto_DAD
                         }
                     }
                 }
-            }
+            }*/
         }
         
 
@@ -324,7 +369,7 @@ namespace Projeto_DAD
 
         private bool SearchForRootServer()
         {
-            int i = 0;
+            /*int i = 0;
             while (i < AllServers.Count)
             {
                 try
@@ -359,7 +404,7 @@ namespace Projeto_DAD
                 {
                     return false;
                 }
-            }
+            }*/
             return true;
 
         }
@@ -370,7 +415,7 @@ namespace Projeto_DAD
             //ping to root
             try
             {
-                ss.Ping();
+                //ss.Ping();
                 //Console.WriteLine("ROOT IS ALIVE");
                 return true;
             }

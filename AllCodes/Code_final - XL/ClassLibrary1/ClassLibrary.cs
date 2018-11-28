@@ -2,15 +2,19 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
+
 namespace Projeto_DAD
 {
     public interface IServerServices
     {
         
-        bool isRoot(); //check if node is root
+        //bool isRoot(); //check if node is root
 
-        void Ping();
+        //void Ping();
 
+        void RX_ReplicaCommand(object cmd);
+        void SinkFromReplicas(object cmd);
+        
         void RX_Command(Command cmd); //Receive Commands do cliente
         Object[] getImage(); //Request on Init
         void TakeCommand(Command cmd);//Get Commands from ROOT
@@ -422,4 +426,8 @@ namespace Projeto_DAD
             return uri;
         }
     }
+
+    
+    
+
 }
