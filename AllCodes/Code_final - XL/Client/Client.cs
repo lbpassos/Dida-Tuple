@@ -14,8 +14,6 @@ namespace Projeto_DAD
     class Client
     {
 
-
-
         private static TcpChannel channel;
 
         static void Main(string[] args)
@@ -24,18 +22,14 @@ namespace Projeto_DAD
 
             int id;
             Uri uri;
-            string path;
+            string path = null;
 
-            if (args.Length != 3)
+            if (args.Length < 2 || args.Length >= 4)
             {
-                Console.WriteLine("Insuficient arguments: CLIENT_ID URL SCRIPT_FILE");
+                Console.WriteLine("Wrong arguments: CLIENT_ID URL SCRIPT_FILE");
                 args = Console.ReadLine().Split(' ');
 
             }
-
-            Console.WriteLine("olaaa" + args[0]);
-
-            id = Int32.Parse(args[0].Substring(1)); //catch number from the 1 position
 
             try
             {
@@ -48,22 +42,36 @@ namespace Projeto_DAD
                 return;
             }
 
-            path = args[2]; //DEpois tem que se fazer a leitura do ficheiro ************************
 
-            
+            try
+            {
+                id = Int32.Parse(args[0].Substring(1)); //catch number from the 1 position
+                path = args[2]; //Depois tem que se fazer a leitura do ficheiro ************************
+            }
+            catch (Exception e)
+            {
+                if (e is IndexOutOfRangeException)
+                {
+                }
+                else
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
 
             channel = new TcpChannel(uri.Port);
             ChannelServices.RegisterChannel(channel, false);
 
             new Thread(() => ClientCallbck_thread()).Start();
-            new Thread(() => Client_thread(uri)).Start();
-           
+            new Thread(() => Client_thread(uri, path)).Start();
+
 
         }
 
         public static void ClientCallbck_thread() //Server will use to sink information
         {
-            
+
             RemotingConfiguration.RegisterWellKnownServiceType(
                 typeof(ClientServices),
                 "MyRemoteClient",
@@ -73,13 +81,15 @@ namespace Projeto_DAD
 
         }
 
-        public static void Client_thread(Uri uri)
+        public static void Client_thread(Uri uri, String path)
         {
 
-            ClientProgram cp = new ClientProgram(uri);
+            Console.WriteLine(uri);
+
+            ClientProgram cp = new ClientProgram(uri, path);
             cp.ClientStateMachine(); //while infinite
 
-            
+
 
         }
 
