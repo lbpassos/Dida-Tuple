@@ -61,13 +61,26 @@ namespace Projeto_DAD
                 textBox_Browse.AppendText(filePath);
                 sr.Close();
 
-                //Scanner for XML file
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.Load(filePath);
-                typeOfExecution = xmlDoc.DocumentElement.SelectSingleNode("type").InnerText;  //Verifica qual o tipo de execução que o PM vai fazer, Sequence ou Step by Step
-                foreach (XmlNode node in xmlDoc.DocumentElement.SelectNodes("command"))
+                ////Scanner for XML file
+                //XmlDocument xmlDoc = new XmlDocument();
+                //xmlDoc.Load(filePath);
+                //typeOfExecution = xmlDoc.DocumentElement.SelectSingleNode("type").InnerText;  //Verifica qual o tipo de execução que o PM vai fazer, Sequence ou Step by Step
+                //foreach (XmlNode node in xmlDoc.DocumentElement.SelectNodes("command"))
+                //{
+                //    commandList.Add(node.InnerText); //Adiciona os comandos à lista de comandos
+                //}
+
+                //Scanner for .txt file
+                const Int32 BufferSize = 128;
+                using (var fileStream = File.OpenRead(filePath))
+                using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, BufferSize))
                 {
-                    commandList.Add(node.InnerText); //Adiciona os comandos à lista de comandos
+                    String line;
+                    while ((line = streamReader.ReadLine()) != null)
+                    {
+                        commandList.Add(line);
+                    }
+
                 }
 
                 button_Send.Enabled = true;
@@ -76,29 +89,12 @@ namespace Projeto_DAD
 
         private void button_Send_Click(object sender, EventArgs e)
         {
-            if (typeOfExecution.Equals("Sequence"))
+            textBox_Browse.Enabled = false;
+            foreach (string command in commandList)
             {
-                textBox_Browse.Enabled = false;
-                foreach (string command in commandList)
-                {
-                    Console.WriteLine(command);
-                    checkLine(command);
-                }
+                Console.WriteLine(command);
+                checkLine(command);
             }
-            else if (typeOfExecution.Equals("Step"))
-            {
-                textBox_Browse.Enabled = false;
-                foreach (string command in commandList)
-                {
-                    checkLine(command);
-                    Console.WriteLine(command);
-                }
-            }
-            else
-            {
-                System.Windows.Forms.MessageBox.Show("The type of execution is not acceptable, please choose between \"Sequence\" and \"Step\"");
-            }
-
         }
 
 

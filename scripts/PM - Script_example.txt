@@ -1,0 +1,3 @@
+Server s1 tcp://localhost:1200 0 0
+Client c1 tcp://localhost:1300 C:\Users\bruno\source\repos\lbpassos\Dida-Tuple\scripts\Client-Script_example.txt
+Client c2 tcp://localhost:1301 C:\Users\bruno\source\repos\lbpassos\Dida-Tuple\scripts\Client-Script_example.txt

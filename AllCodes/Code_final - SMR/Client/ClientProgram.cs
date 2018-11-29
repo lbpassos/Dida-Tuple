@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Runtime.Remoting;
 using System.Threading;
 using System.Diagnostics;
-using System.Xml;
 
 namespace Projeto_DAD
 {
@@ -320,12 +319,17 @@ namespace Projeto_DAD
         {
             List<string> commandList = new List<string>();
 
-            //Scanner for XML file
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.Load(filePath);
-            foreach (XmlNode node in xmlDoc.DocumentElement.SelectNodes("command"))
+            //Scanner for .txt file
+            const Int32 BufferSize = 128;
+            using (var fileStream = File.OpenRead(filePath))
+            using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, BufferSize))
             {
-                commandList.Add(node.InnerText); //Adiciona os comandos à lista de comandos
+                String line;
+                while ((line = streamReader.ReadLine()) != null)
+                {
+                    commandList.Add(line);
+                }
+
             }
 
             return commandList;

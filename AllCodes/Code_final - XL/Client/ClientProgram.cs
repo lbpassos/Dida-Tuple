@@ -26,6 +26,7 @@ namespace Projeto_DAD
         private const int STATE_CLIENT_COMMAND_INTERPRETATION = 1;
         private const int STATE_CLIENT_COMMAND_CYCLE = 2;
         private const int STATE_CLIENT_COMMAND_EXECUTION = 3;
+        private const int STATE_READ_CLIENT_SCRIPT = 4;
 
         private int STATE_CLIENT = STATE_CLIENT_ROOT_DISCOVER;
 
@@ -45,13 +46,18 @@ namespace Projeto_DAD
         private Uri MyAddress;
         private static bool BlockUntilAnswer = false;
 
+        private string clientScript_path;
+        private List<string> script_comands = new List<string>();
 
 
-        public ClientProgram(Uri uri)
+
+        public ClientProgram(Uri uri, String clientScript_path)
         {
             MyAddress = uri;
             cs = new ClientServices();
             AllServers = new List<string>();
+
+            this.clientScript_path = clientScript_path;
 
             //Ler a lista de todos os servidores
             AllServers = new List<string>();
@@ -161,8 +167,78 @@ namespace Projeto_DAD
                         if (SearchForRootServer() == true)
                         {
                             //new Thread(() => PingLoop()).Start(); SERA ***********************************
-                            STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
+                            if (clientScript_path != null)
+                                STATE_CLIENT = STATE_READ_CLIENT_SCRIPT;
+                            else
+                                STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                         }
+                        break;
+                    case STATE_READ_CLIENT_SCRIPT:          //Está martelado, fica assim, caso tenhamos tempo otimizo depois
+                        script_comands = ReadScriptFile(clientScript_path);
+                        foreach (string linha in script_comands)
+                        {
+                            results = linha.Split(' ');
+                            if (results[0].Equals("add") || results[0].Equals("read") || results[0].Equals("take"))
+                            {
+                                command = command.Replace(">", "");
+                                command = command.Replace("<", "");
+
+                                List<string> tupleArguments = FiltroInput(results[1]);
+
+                                object[] tupleOBJ = new object[tupleArguments.Count];
+                                for (int i = 0; i < tupleArguments.Count; ++i)
+                                {
+                                    tupleOBJ[i] = GetObjectFromString(tupleArguments[i]);
+                                }
+                                tuple = new MyTuple(tupleOBJ);
+
+                                switch (results[0])
+                                {
+                                    case "add":
+                                        Execute("add", tuple);
+                                        if (START_CICLE == true)
+                                        {
+                                            CommandsInCycle.Add(new Command("add", tuple, null));
+                                        }
+                                        break;
+                                    case "read":
+                                        Execute("read", tuple);
+                                        if (START_CICLE == true)
+                                        {
+                                            CommandsInCycle.Add(new Command("read", tuple, null));
+                                        }
+                                        break;
+                                    case "take":
+                                        Execute("take", tuple);
+                                        if (START_CICLE == true)
+                                        {
+                                            CommandsInCycle.Add(new Command("take", tuple, null));
+                                        }
+                                        break;
+                                    case "wait":
+                                        Thread.Sleep(Int32.Parse(results[1]));
+                                        if (START_CICLE == true)
+                                        {
+                                            CommandsInCycle.Add(new Command("wait", results[1], null));
+                                        }
+                                        break;
+                                    case "begin-repeat":
+                                        START_CICLE = true;
+                                        NumberOfCycles = Int32.Parse(results[1]);
+                                        break;
+                                    case "end-repeat":
+                                        START_CICLE = false;
+                                        --NumberOfCycles;
+                                        STATE_CLIENT = STATE_CLIENT_COMMAND_CYCLE;
+                                        break;
+                                    default:
+                                        Console.WriteLine("Wrong type of command!");
+                                        break;
+                                }
+                            }
+                        }
+
+                        STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                         break;
                     case STATE_CLIENT_COMMAND_INTERPRETATION:
                         Console.Write("Command: ");
@@ -284,9 +360,26 @@ namespace Projeto_DAD
 
 
         }
-    
 
+        public List<string> ReadScriptFile(string filePath)
+        {
+            List<string> commandList = new List<string>();
 
+            //Scanner for .txt file
+            const Int32 BufferSize = 128;
+            using (var fileStream = File.OpenRead(filePath))
+            using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, BufferSize))
+            {
+                String line;
+                while ((line = streamReader.ReadLine()) != null)
+                {
+                    commandList.Add(line);
+                }
+
+            }
+
+            return commandList;
+        }
 
 
         private static List<string> FiltroInput(string text)
