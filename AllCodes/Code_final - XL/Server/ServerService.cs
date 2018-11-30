@@ -10,7 +10,7 @@ namespace Projeto_DAD
     class ServerService : MarshalByRefObject, IServerServices
     {
 
-        private static TupleSpace ts = new TupleSpace();
+        public static TupleSpace ts = new TupleSpace();
        // private static CommunicationLayer commLayer = new CommunicationLayer();
         private static bool MustFreeze = false;
         //private static bool Root = false;
@@ -18,7 +18,7 @@ namespace Projeto_DAD
 
 
         /* XL */
-        private static CommunicationLayerReplica CommLayer_forReplica = new CommunicationLayerReplica(); //Replica channel
+        public static CommunicationLayerReplica CommLayer_forReplica = new CommunicationLayerReplica(); //Replica channel
 
         public void Ping()
         {
@@ -40,28 +40,16 @@ namespace Projeto_DAD
 
         }
 
-        public static void CheckCommandsInQueueFromReplica_thread() //Check commands send by the replicas
-        {
-            while (true)
-            {
-                while (MustFreeze == true) ; //FREEZE ****************************
-                Thread.Sleep(50);//Min time to check commands
-                if (CommLayer_forReplica.GetQueueSize() > 0) //if there is commands
-                {
-                    CommandReplicas cmd = CommLayer_forReplica.RemoveFromCommandQueue();
+        
 
-                    new Thread(() => DealWithRequestReplicaCommand_thread(cmd)).Start(); //Launch thread to attend command
 
-                }
-            }
-        }
 
         /// <summary>
         /// Process Command received from the client
         /// </summary>
         /// <param name="cmd"></param>
         /// <param name="payload"></param>
-        public static void DealWithRequestReplicaCommand_thread(CommandReplicas cmd)
+        /*public static void DealWithRequestReplicaCommand_thread(CommandReplicas cmd)
         {
             Object tmp;
             View v = null;
@@ -94,7 +82,7 @@ namespace Projeto_DAD
                 case "REFUSE":
                     break;
             }
-        }
+        }*/
 
 
         public void SinkFromReplicas(object cmd) //Receive answers

@@ -7,90 +7,46 @@ using System.IO;
 using System.Threading;
 using System.Collections;
 using System.Runtime.Remoting.Messaging;
-using System.Diagnostics;
+
 
 namespace Projeto_DAD
 {
-    class Timeout
-    {
-        private Stopwatch st;
-        private int id;
-        private int Timeout_ms;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="i">ServerID</param>
-        /// <param name="t">Timeout constant</param>
-        public Timeout(int i, int t)
-        {
-            st = new Stopwatch();
-            id = i;
-            Timeout_ms = t;
-        }
-
-        public bool IsTimeOut()
-        {
-            if(st.ElapsedMilliseconds>Timeout_ms)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public override bool Equals(object obj)
-        {
-            Timeout t = obj as Timeout;
-            if (t == null)
-            {
-                return false;
-            }
-            return this.id == t.id;
-        }
-        public override int GetHashCode()
-        {
-            return id.GetHashCode();
-        }
-
-    }
-
-
     class ServerProgram
     {
-
-       
-
-        //private const int STATE_MACHINE_NETWORK_KEEP_ALIVE = 1;
-        //private const int STATE_MACHINE_NETWORK_IM_ROOT = 2;
-        //private const int STATE_MACHINE_NETWORK_END = 3;
-
-        
-
-        
-        private int Root_id;
-
-        private Random rand;
 
         /* XL */
         private const int STATE_MACHINE_NETWORK_START = 0;
         private const int STATE_MACHINE_WAIT_REPLY = 1;
+        private const int STATE_MACHINE_WAIT_ACCEPTANCE = 2;
+        private const int STATE_MACHINE_PROCESS_ACCEPTANCE = 3;
+        private const int STATE_MACHINE_KEEP_ALIVE = 4;
+
+        private const int STATE_MACHINE_PROCESS_ACCEPTED = 3;
+        private const int KEEP_ALIVE = 4;
+        private const int ALONE = 5;
 
         private static int STATE_MACHINE_NETWORK;
 
         private static View CurrentViewID;
         private static View ProposedViewID;
-        private static Uri MyAddress;
+        private static View TmpView; //temporary view received in an INVITE
 
-        private static Queue PendingReplyFromServers; //Servers in the current view
+        private static Uri MyAddress;
+        private static int MyID;
+
+        private static List<Timeout> PendingReplyFromServers; //Servers in the current view
         private static List<int> ID_SendCommandsToReplica_thread;
-;
+        private static List<CommandReplicas> Accepted; //Accepted Commands Received
+        private static List<Timeout> Hello; //Hello Commands Received
+        private static List<Timeout> Commits; //Hello Commands Received
+
         private static CommunicationLayerReplica AnswerToMyCommandsFromReplicas;
 
-        private int SendMessagesCount = 0; //Number os sent messages
-        private int MessagesAcceptedCount = 0; //Number os ACCEPTED messages
-        private int MessagesRefusedCount = 0; //Number os REFUSED messages
-        //private bool AllServersDown = false; //No message was sent
-        private readonly object SendMessagesCountLock = new object(); //Lock
+        private static int Sent_INVITEMessagesCount = 0; //Number os sent messages
+        
+        private static readonly object PendingMessagesCountLock = new object(); //Lock
+        private static readonly object HelloMessagesCountLock = new object(); //Lock
+        private static readonly object ChannelLock = new object(); //Lock
 
 
         public static View GetCurrentViewID()
@@ -114,12 +70,98 @@ namespace Projeto_DAD
 
 
 
+        //THread safe INsert In The Pendings List
+        //===============================================================================
+        public static void InsertInPending(Timeout element) //Insert in Pendings List
+        {
+            lock (PendingMessagesCountLock)
+            {
+                PendingReplyFromServers.Add(element);
+            }
+        }
+        public static bool GetElementInPending(int element) //Check and removes element from the Pendings List if it exists
+        {
+            lock (PendingMessagesCountLock)
+            {
+                Timeout t = new Timeout(element, 0);
+                if (PendingReplyFromServers.Contains( t ) )
+                {
+                    for(int i=0; i< PendingReplyFromServers.Count; ++i)
+                    {
+                        if(t.Equals(PendingReplyFromServers[i])==true)
+                        {
+                            PendingReplyFromServers.RemoveAt(i);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+        public static int GetPendingsSize()
+        {
+            lock (PendingMessagesCountLock)
+            {
+                return PendingReplyFromServers.Count;
+            }
+
+        }
+        public static void ErasePendings()
+        {
+            lock (PendingMessagesCountLock)
+            {
+                PendingReplyFromServers.Clear();
+            }
+
+        }
+
+        //THread safe INsert In The Hello List
+        //===============================================================================
+        public static void InsertInHello(Timeout element) //Insert in Pendings List
+        {
+            lock (HelloMessagesCountLock)
+            {
+                Hello.Add(element);
+            }
+        }
+        public static int GetHelloSize()
+        {
+            lock (HelloMessagesCountLock)
+            {
+                return Hello.Count;
+            }
+        }
+        public static void EraseHellos()
+        {
+            lock (HelloMessagesCountLock)
+            {
+                Hello.Clear();
+            }
+        }
+        public static bool ElementInHelloIsTimeout(int element) //Check and removes element from the Pendings List if it exists
+        {
+            lock (HelloMessagesCountLock)
+            {
+                if (Hello[element].IsTimeOut() == true)
+                {
+                    return true;
+                }
+                else
+                {
+                    Hello[element].ResetTimeOut();
+                    return false;
+                }
+                
+            }
+        }
+
+
         
 
-
-       
-
-        public ServerProgram(Uri uri)
+        //=========================================================================================
+        //                                      MAIN
+        //=========================================================================================
+        public ServerProgram(Uri uri, int id)
         {
 
             /* XL */
@@ -129,31 +171,107 @@ namespace Projeto_DAD
             AnswerToMyCommandsFromReplicas = new CommunicationLayerReplica();
 
             STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_START;
-            PendingReplyFromServers = Queue.Synchronized(new Queue());
+            PendingReplyFromServers = new List<Timeout>();
             ID_SendCommandsToReplica_thread = new List<int>();
+            Accepted = new List<CommandReplicas>();
+            Hello = new List<Timeout>();
+            MyID = id;
 
             /* END XL */
 
 
 
-            Root_id = 0;
-            rand = new Random();
+           
 
             //new Thread(() => PingLoop()).Start();
             new Thread(() => NetworkStatusLoop()).Start();
+            new Thread(() => CheckPendings_thread()).Start();
+            //new Thread(() => CheckHellos_thread()).Start();
+            //new Thread(() => CheckHellos_thread()).Start();
 
         }
 
         
         private void NetworkStatusLoop()
         {
-            /*while (STATE_MACHINE_NETWORK != STATE_MACHINE_NETWORK_END)
-            {
+            
                 NetworkStatusStateMachine();
-                //Thread.Sleep(1000);
-            }*/
+                Thread.Sleep(50);
         }
 
+
+        public static void CheckCommandsInQueueFromReplica_thread() //Check commands send by the replicas 
+        {
+            while (true)
+            {
+                
+                Thread.Sleep(50);//Min time to check commands
+                
+                if (ServerService.CommLayer_forReplica.GetQueueSize() > 0) //if there is commands
+                {
+                    CommandReplicas cmd = ServerService.CommLayer_forReplica.RemoveFromCommandQueue();
+                    switch (cmd.GetCommand())
+                    {
+                        case "INVITE":
+                            if(cmd.GetProposedView().GetSequence() <= CurrentViewID.GetSequence())
+                            {
+                                //I Must send REFUSAL
+                                SendCommandsToReplica_thread(new CommandReplicas("REFUSAL", CurrentViewID, null, MyAddress, cmd.GetProposedView().GetNodeID()) );
+                            }
+                            else
+                            {
+                                TmpView = cmd.GetProposedView();//temporary view
+                                SendCommandsToReplica_thread(new CommandReplicas("ACCEPTANCE", CurrentViewID, null, MyAddress, cmd.GetProposedView().GetNodeID()));
+                            }
+                            break;
+                        case "ACCEPTANCE":
+                            if (GetElementInPending(cmd.GetID())==true)//Is it in pendings
+                            {
+                                Accepted.Add(cmd);
+                            }                          
+                            if (GetPendingsSize() == 0)
+                            {
+                                //No more answers to receive
+                                STATE_MACHINE_NETWORK = STATE_MACHINE_PROCESS_ACCEPTANCE;
+
+                            }
+                            break;
+                        case "REFUSAL":
+                            if (GetElementInPending(cmd.GetID()) == true)//Is it in pendings
+                            {
+                                STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_START; //Must start with new Ptopose viewId
+                            }
+                            break;
+                        case "HELLO":
+                            if(STATE_MACHINE_NETWORK == STATE_MACHINE_KEEP_ALIVE)
+                            {
+                                //Only process HELLO if in KEep alive mode
+                                for(int i=0; i< GetHelloSize(); ++i)
+                                {
+                                    if( Hello[i].Equals(new Timeout(cmd.GetID(),0) ) == true)
+                                    {
+                                        if( ElementInHelloIsTimeout(i)==true)
+                                        {
+                                            STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_START; //Must start with new Ptopose viewId
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        case "COMMIT":
+
+                            ServerService.ts = cmd.GetTSS(); //Update Tuplespace
+                            CurrentViewID.ClearView();
+                            for (int i = 0; i < cmd.GetProposedView().GetSizeOfView(); ++i)
+                            {
+                                CurrentViewID.AddNodeInView(cmd.GetProposedView().GetElementOfView(i));
+                            }
+                            STATE_MACHINE_NETWORK = STATE_MACHINE_KEEP_ALIVE;
+                            break;
+                    }
+                }
+            }
+        }
 
         //Survey the Pending Queue (Commands without Reply)
         private void CheckPendings_thread()
@@ -161,34 +279,68 @@ namespace Projeto_DAD
             while (true)
             {
                 Thread.Sleep(50);
-                if (PendingReplyFromServers.Count > 0)
+                Console.WriteLine("Checking Pendings");
+                if (GetPendingsSize() > 0)
                 {
-                    Timeout tmp = (Timeout)PendingReplyFromServers.Dequeue();
-                    if (tmp.IsTimeOut()==false) //If timeout not expire. Push to Queue 
+                    for(int i=0; i< GetPendingsSize(); ++i)
                     {
-                        PendingReplyFromServers.Enqueue(tmp);
+                        GetElementInPending(i);
+                    }                  
+                }
+            }
+        }
+
+        //Survey the Hello Queue (Hello Commands we must receive in the current view)
+        private void CheckHellos_thread()
+        {
+            while (true)
+            {
+                Thread.Sleep(50);
+                if(STATE_MACHINE_NETWORK== STATE_MACHINE_KEEP_ALIVE)
+                {
+                    if (GetHelloSize() > 0)
+                    {
+                        for(int i=0; i<GetHelloSize(); ++i)
+                        {
+                            if (ElementInHelloIsTimeout(i) == true)
+                            {
+                                STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_START; //At least one istimeout. Start View search
+                                break;
+                            }
+                        }
                     }
                 }
             }
         }
 
         //Send Commands to replicas
-        private void SendCommandsToReplica_thread(CommandReplicas cmd, int Server_id)
+        private static void SendCommandsToReplica_thread(CommandReplicas cmd)
         {
-            ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[Server_id].UID.AbsoluteUri + "MyRemoteObjectName");
+
+            //Console.WriteLine("Sending INVITES to " + Server.AllServers[cmd.GetID()-1].UID.AbsoluteUri);
+            //Channel(cmd);
+            ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[cmd.GetID() - 1].UID.AbsoluteUri + "MyRemoteObjectName");
+          
 
             try
             {
                 switch (cmd.GetCommand())
                 {
                     case "INVITE":
-                        
+                        Console.WriteLine("Sending INVITES to " + Server.AllServers[cmd.GetID()-1].UID.AbsoluteUri);
+
+                        obj.RX_ReplicaCommand(cmd); //Send
+                        InsertInPending( new Timeout(cmd.GetID(), 1000) ); //Timeout 1 [sec]. Push to Pendings
+                        ++Sent_INVITEMessagesCount;
+                        break;
+                    case "ACCEPTANCE":
+                        obj.RX_ReplicaCommand(cmd); //Send
+                        break;
+                    case "HELLO":
                         obj.RX_ReplicaCommand(cmd);
-                        PendingReplyFromServers.Enqueue(new Timeout(Server_id, 1000)); //Timeout 1 [sec]
-                        lock (SendMessagesCountLock)
-                        {
-                            ++SendMessagesCount;
-                        }
+                        break;
+                    case "REFUSAL":
+                        obj.RX_ReplicaCommand(cmd);
                         break;
                     case "COMMIT":
                         obj.RX_ReplicaCommand(cmd);
@@ -200,20 +352,27 @@ namespace Projeto_DAD
             }
             catch(Exception e)
             {
-
+                Console.WriteLine(e);
             }
         }
 
 
-        private void NetworkStatusStateMachine()
+        //Main program
+        private static void NetworkStatusStateMachine()
         {
 
+            Console.WriteLine("STAE: " + STATE_MACHINE_NETWORK);
             switch (STATE_MACHINE_NETWORK)
             {
                 case STATE_MACHINE_NETWORK_START: // Send INVITE for all
-                    //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: BEGIN");
+                    Console.WriteLine("IN STATE_MACHINE_NETWORK_START: Sending INVITES");
+
                     ProposedViewID.IncSequence(); //Propose viewID+1
                     PendingReplyFromServers.Clear();
+                    Accepted.Clear();
+                    ErasePendings(); //Erase pendings
+                    Sent_INVITEMessagesCount = 0;
+                    EraseHellos();
 
                     for (int i = 0; i < Server.AllServers.Count; i++)
                     {
@@ -221,16 +380,82 @@ namespace Projeto_DAD
                         {
                             continue;
                         }
-                        Thread newThread = new Thread( new ThreadStart(SendCommandsToReplica_thread) );
 
-                            //new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress), i)).Start();
-                        ID_SendCommandsToReplica_thread;
-
+                        //new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, Server.AllServers[i].ID))).Start();
+                        //Thread.Sleep(50);
+                        //Task.Factory.StartNew(() => SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, Server.AllServers[i].ID)));
+                        SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, Server.AllServers[i].ID));
                     }
-                    STATE_MACHINE_NETWORK = STATE_MACHINE_WAIT_REPLY;
+                    STATE_MACHINE_NETWORK = STATE_MACHINE_WAIT_ACCEPTANCE;
                     break;
-                case STATE_MACHINE_WAIT_REPLY:
+                case STATE_MACHINE_WAIT_ACCEPTANCE:
                     break;
+                case STATE_MACHINE_PROCESS_ACCEPTANCE:
+                    if(Accepted.Count>(Sent_INVITEMessagesCount / 2) )
+                    {
+                        int pos_tmp = 0;
+                        int sequence_tmp=CurrentViewID.GetSequence();
+                        bool flag = false;
+                        for (int i=0; i<Accepted.Count; ++i)
+                        {
+                            if( Accepted[i].GetProposedView().GetSequence()<= CurrentViewID.GetSequence())
+                            {
+                                continue; //Ignores ViewID inferior than the current
+                            }
+                            else
+                            {
+                                if (Accepted[i].GetProposedView().GetSequence() > sequence_tmp)
+                                {
+                                    sequence_tmp = Accepted[i].GetProposedView().GetSequence();
+                                    pos_tmp = i;
+                                    flag = true;
+                                }
+                            }
+                        }
+                        //Initializes everything
+                        if (flag == true)
+                        {
+                            ServerService.ts = Accepted[pos_tmp].GetTSS(); //Update Tuplespace
+                            CurrentViewID.ClearView();
+                            for(int i=0; i< Accepted[pos_tmp].GetProposedView().GetSizeOfView(); ++i)
+                            {
+                                CurrentViewID.AddNodeInView(Accepted[pos_tmp].GetProposedView().GetElementOfView(i));
+                            }
+
+                            ProposedViewID = CurrentViewID;
+                            for (int i = 0; i < CurrentViewID.GetSizeOfView(); ++i)
+                            {
+                                int tmp = CurrentViewID.GetElementOfView(i);
+                                if (tmp == MyID)
+                                {
+                                    continue;
+                                }
+                                new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("COMMIT", CurrentViewID, ServerService.ts, MyAddress, tmp))).Start();
+                            }                               
+                            STATE_MACHINE_NETWORK = STATE_MACHINE_KEEP_ALIVE;
+                        }
+                    }
+                    STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_START;
+                    break;
+                case STATE_MACHINE_KEEP_ALIVE:
+                    Thread.Sleep(500);//Send keep alive in 0.5 seconds
+                    for(int i=0; i<CurrentViewID.GetSizeOfView(); ++i)
+                    {
+                        int tmp = CurrentViewID.GetElementOfView(i);
+                        if (tmp == MyID)
+                        {
+                            continue;
+                        }
+                        Hello[i] = new Timeout(tmp, 1000);
+                        new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, ServerService.ts, MyAddress, tmp))).Start();                      
+                    }
+                    break;
+
+                default:
+                    break;
+
+
+
             }
         }
         

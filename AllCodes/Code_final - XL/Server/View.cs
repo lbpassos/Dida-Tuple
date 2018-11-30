@@ -3,18 +3,48 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace Projeto_DAD
 {
+    [Serializable]
     public class View
     {
         private int NodeId;
+        private ArrayList NodesInView;
         private int Sequence;
 
         public View(int Nid)
         {
             NodeId = Nid;
+            NodesInView = new ArrayList();
+            NodesInView.Add(Nid); //starts with the only node
             Sequence = 1;
+
+        }
+
+        public int GetNodeID()
+        {
+            return NodeId;
+        }
+        public void ClearView()
+        {
+            NodesInView.Clear();
+            NodesInView.Add(NodeId); //starts with the only node
+        }
+        public void AddNodeInView(int NodeId)
+        {
+            NodesInView.Add(NodeId);
+        }
+
+        public int GetSizeOfView()
+        {
+            return NodesInView.Count;
+        }
+
+        public int GetElementOfView(int pos)
+        {
+            return (int)NodesInView[pos];
         }
 
         public void IncSequence()

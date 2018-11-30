@@ -112,7 +112,7 @@ namespace Projeto_DAD
             ChannelServices.RegisterChannel(channel, false);
 
             new Thread(() => Server_thread()).Start();
-           //new Thread(() => Client_thread()).Start();
+           new Thread(() => Client_thread(uri, id)).Start();
            //new Thread(() => ServerService.CheckCommandsInQueue_thread()).Start();
 
             System.Console.WriteLine("I'm server: " + args[1]);
@@ -131,10 +131,10 @@ namespace Projeto_DAD
 
         }
 
-        public static void Client_thread(Uri uri) //Client in Server
+        public static void Client_thread(Uri uri, int id) //Client in Server
         {
 
-            new ServerProgram(uri);
+            new ServerProgram(uri,id);
 
             while (true) ;
 
