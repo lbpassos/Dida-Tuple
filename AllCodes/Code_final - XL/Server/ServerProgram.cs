@@ -20,10 +20,7 @@ namespace Projeto_DAD
         private const int STATE_MACHINE_WAIT_ACCEPTANCE = 2;
         private const int STATE_MACHINE_PROCESS_ACCEPTANCE = 3;
         private const int STATE_MACHINE_KEEP_ALIVE = 4;
-
-        private const int STATE_MACHINE_PROCESS_ACCEPTED = 3;
-        private const int KEEP_ALIVE = 4;
-        private const int ALONE = 5;
+        private const int STATE_MACHINE_IM_ALONE = 5;
 
         private static int STATE_MACHINE_NETWORK;
 
@@ -43,7 +40,11 @@ namespace Projeto_DAD
         private static CommunicationLayerReplica AnswerToMyCommandsFromReplicas;
 
         private static int Sent_INVITEMessagesCount = 0; //Number os sent messages
-        
+        private static int NotSent_INVITEMessagesCount = 0; //Number os sent messages
+
+        //private static Semaphore Semaphore_pending;  //Semaphore for pending thread vs 
+        private static ManualResetEvent Pending_SignalEvent = new ManualResetEvent(false);
+
         private static readonly object PendingMessagesCountLock = new object(); //Lock
         private static readonly object HelloMessagesCountLock = new object(); //Lock
         private static readonly object ChannelLock = new object(); //Lock
@@ -79,25 +80,19 @@ namespace Projeto_DAD
                 PendingReplyFromServers.Add(element);
             }
         }
-        public static bool GetElementInPending(int element) //Check and removes element from the Pendings List if it exists
+        public static bool GetElementInPending(int element) //Check and removes element from the Pendings List only if TIMEOUT
         {
             lock (PendingMessagesCountLock)
             {
-                Timeout t = new Timeout(element, 0);
-                if (PendingReplyFromServers.Contains( t ) )
+                if (PendingReplyFromServers[element].IsTimeOut())
                 {
-                    for(int i=0; i< PendingReplyFromServers.Count; ++i)
-                    {
-                        if(t.Equals(PendingReplyFromServers[i])==true)
-                        {
-                            PendingReplyFromServers.RemoveAt(i);
-                            return true;
-                        }
-                    }
+                    PendingReplyFromServers.RemoveAt(element);
+                    return true;
                 }
                 return false;
             }
         }
+       
         public static int GetPendingsSize()
         {
             lock (PendingMessagesCountLock)
@@ -176,12 +171,13 @@ namespace Projeto_DAD
             Accepted = new List<CommandReplicas>();
             Hello = new List<Timeout>();
             MyID = id;
+            //Semaphore_pending = new Semaphore(0, 1); ;
 
             /* END XL */
 
 
 
-           
+
 
             //new Thread(() => PingLoop()).Start();
             new Thread(() => NetworkStatusLoop()).Start();
@@ -192,11 +188,16 @@ namespace Projeto_DAD
         }
 
         
-        private void NetworkStatusLoop()
+        private static void NetworkStatusLoop()
         {
-            
+
+            while (true)
+            {
                 NetworkStatusStateMachine();
+
                 Thread.Sleep(50);
+            }
+           
         }
 
 
@@ -278,14 +279,31 @@ namespace Projeto_DAD
         {
             while (true)
             {
-                Thread.Sleep(50);
-                Console.WriteLine("Checking Pendings");
-                if (GetPendingsSize() > 0)
+                
+                Console.WriteLine("Checking Pendings Waiting for Event");
+
+                //Semaphore_pending.WaitOne();
+                Pending_SignalEvent.WaitOne(); //There is at least one Pending answer after INVITE
+                Pending_SignalEvent.Reset();
+
+                while (true)
                 {
-                    for(int i=0; i< GetPendingsSize(); ++i)
+                    Console.WriteLine("Checking Pendings has the Semaphore");
+                    Console.WriteLine("NUmber of Pendings" + GetPendingsSize());
+                    if (GetPendingsSize() > 0)
                     {
-                        GetElementInPending(i);
-                    }                  
+                        for (int i = 0; i < GetPendingsSize(); ++i)
+                        {
+                            GetElementInPending(i);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Checking Pendings FREED the Semaphore");
+                        //Semaphore_pending.Release(1);
+
+                    }
+                    Thread.Sleep(500);
                 }
             }
         }
@@ -332,6 +350,14 @@ namespace Projeto_DAD
                         obj.RX_ReplicaCommand(cmd); //Send
                         InsertInPending( new Timeout(cmd.GetID(), 1000) ); //Timeout 1 [sec]. Push to Pendings
                         ++Sent_INVITEMessagesCount;
+
+                        if(GetPendingsSize() == 1)
+                        {
+                            Pending_SignalEvent.Set(); //Signal at least one message sent
+                        }
+                        
+                        
+
                         break;
                     case "ACCEPTANCE":
                         obj.RX_ReplicaCommand(cmd); //Send
@@ -352,16 +378,22 @@ namespace Projeto_DAD
             }
             catch(Exception e)
             {
-                Console.WriteLine(e);
+                if (cmd.GetCommand() == "INVITE")
+                {
+                    ++NotSent_INVITEMessagesCount;
+                }
+                //Console.WriteLine(e);
             }
         }
 
 
-        //Main program
+        //===================================================================
+        //                       Main program
+        //===================================================================
         private static void NetworkStatusStateMachine()
         {
 
-            Console.WriteLine("STAE: " + STATE_MACHINE_NETWORK);
+            Console.WriteLine("STATE: " + STATE_MACHINE_NETWORK);
             switch (STATE_MACHINE_NETWORK)
             {
                 case STATE_MACHINE_NETWORK_START: // Send INVITE for all
@@ -381,14 +413,18 @@ namespace Projeto_DAD
                             continue;
                         }
 
-                        //new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, Server.AllServers[i].ID))).Start();
-                        //Thread.Sleep(50);
-                        //Task.Factory.StartNew(() => SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, Server.AllServers[i].ID)));
                         SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, Server.AllServers[i].ID));
                     }
                     STATE_MACHINE_NETWORK = STATE_MACHINE_WAIT_ACCEPTANCE;
                     break;
                 case STATE_MACHINE_WAIT_ACCEPTANCE:
+                    Console.WriteLine("Num NOT SENT " + NotSent_INVITEMessagesCount);
+                    if( NotSent_INVITEMessagesCount==Server.AllServers.Count-1) //I´m ALONE
+                    {
+                        NotSent_INVITEMessagesCount = 0;
+                        STATE_MACHINE_NETWORK = STATE_MACHINE_IM_ALONE;                         
+                    }
+
                     break;
                 case STATE_MACHINE_PROCESS_ACCEPTANCE:
                     if(Accepted.Count>(Sent_INVITEMessagesCount / 2) )
@@ -447,8 +483,13 @@ namespace Projeto_DAD
                             continue;
                         }
                         Hello[i] = new Timeout(tmp, 1000);
-                        new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, ServerService.ts, MyAddress, tmp))).Start();                      
+                        //new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, ServerService.ts, MyAddress, tmp))).Start();
+                        SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, ServerService.ts, MyAddress, tmp));
                     }
+                    break;
+                case STATE_MACHINE_IM_ALONE:
+                    Console.WriteLine("I´m ALONE");
+                    
                     break;
 
                 default:

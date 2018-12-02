@@ -27,10 +27,10 @@ namespace Semaphore
             // so that the entire semaphore count is initially
             // owned by the main program thread.
             //
-            _pool = new Semaphore(1, 1);
+            _pool = new Semaphore(0, 1);
 
             new Thread(() => um()).Start();
-            new Thread(() => dois()).Start();
+            //new Thread(() => dois()).Start();
 
             
             Console.ReadLine();
@@ -44,7 +44,9 @@ namespace Semaphore
                 _pool.WaitOne();
                 Console.WriteLine("Thread UM enters the semaphore.");
                 //Console.WriteLine("Thread UM releases the semaphore.");
-                //_pool.Release();
+                Thread.Sleep(20000);
+                _pool.Release(1);
+                Console.WriteLine("Thread UM leaves the semaphore.");
 
             }
         }
@@ -53,8 +55,10 @@ namespace Semaphore
         {
             while (true)
             {
+                Thread.Sleep(10000);
+                _pool.Release(1);
                 Console.WriteLine("Thread DOIS releases the semaphore.");
-                _pool.Release();
+               
             }
         }
 

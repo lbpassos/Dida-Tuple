@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace Projeto_DAD
+namespace Timeout
 {
     class Timeout
     {
@@ -58,7 +58,21 @@ namespace Projeto_DAD
         {
             return " s: " + st.ElapsedMilliseconds;
         }
-        
+
+        public static void Main(string[] args)
+        {
+            Timeout um = new Timeout(1, 1000);
+            Thread.Sleep(500);
+            Console.WriteLine(um);
+            Thread.Sleep(500);
+            Console.WriteLine(um);
+            Thread.Sleep(500);
+            Console.WriteLine(um);
+            Thread.Sleep(500);
+            Console.WriteLine(um);
+
+            Console.ReadLine();
+        }
+
     }
-    
 }
