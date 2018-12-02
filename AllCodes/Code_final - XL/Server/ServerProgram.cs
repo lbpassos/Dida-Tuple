@@ -15,6 +15,29 @@ namespace Projeto_DAD
     {
 
         /* XL */
+        // ============================ MANAGER
+        private static int MANAGER_MODE_STATE;
+        private const int MANAGER_MODE_STATE_BLOCK = 0;
+        private const int MANAGER_MODE_STATE_SEND_INVITATION = 1;
+        private const int MANAGER_MODE_STATE_WAIT_FOR_ACCEPTANCE = 2;
+        private const int MANAGER_MODE_STATE_KEEP_ALIVE = 3;
+
+        // ============================ UNDERLING
+        private static int UNDERLING_MODE_STATE;
+        private const int UNDERLING_MODE_STATE_BLOCK = 0;
+        private const int UNDERLING_MODE_STATE_RECEIVE_INVITATION = 1;
+
+        // ============================ TIMEOUT DEFINITION FOR EACH MESSAGE (TTL)
+        private const int TTL = 1000;
+
+
+        // ============================ EVENTS
+        private static ManualResetEvent Pending_SignalEvent = new ManualResetEvent(false); //Pending thread can start
+        private static ManualResetEvent PendingEmpty_SignalEvent = new ManualResetEvent(false); //List of pendings is Empty
+        private static ManualResetEvent UnderlingStart_SignalEvent = new ManualResetEvent(false); //List of pendings is Empty
+        private static ManualResetEvent UnderlingMustNotStart_SignalEvent = new ManualResetEvent(false); //List of pendings is Empty
+
+
         private const int STATE_MACHINE_NETWORK_START = 0;
         private const int STATE_MACHINE_WAIT_REPLY = 1;
         private const int STATE_MACHINE_WAIT_ACCEPTANCE = 2;
@@ -42,8 +65,8 @@ namespace Projeto_DAD
         private static int Sent_INVITEMessagesCount = 0; //Number os sent messages
         private static int NotSent_INVITEMessagesCount = 0; //Number os sent messages
 
-        //private static Semaphore Semaphore_pending;  //Semaphore for pending thread vs 
-        private static ManualResetEvent Pending_SignalEvent = new ManualResetEvent(false);
+        
+        
 
         private static readonly object PendingMessagesCountLock = new object(); //Lock
         private static readonly object HelloMessagesCountLock = new object(); //Lock
@@ -92,7 +115,24 @@ namespace Projeto_DAD
                 return false;
             }
         }
-       
+        public static bool IsElementInPending(Timeout element) //Check and removes element from the Pendings List only if TIMEOUT
+        {
+            lock (PendingMessagesCountLock)
+            {
+                if (PendingReplyFromServers.Contains(element))
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+        public static void RemoveElementInPending(int pos) //Check and removes element from the Pendings List only if TIMEOUT
+        {
+            lock (PendingMessagesCountLock)
+            {
+                PendingReplyFromServers.RemoveAt(pos);
+            }
+        }
         public static int GetPendingsSize()
         {
             lock (PendingMessagesCountLock)
@@ -171,6 +211,8 @@ namespace Projeto_DAD
             Accepted = new List<CommandReplicas>();
             Hello = new List<Timeout>();
             MyID = id;
+
+            MANAGER_MODE_STATE = MANAGER_MODE_STATE_SEND_INVITATION;
             //Semaphore_pending = new Semaphore(0, 1); ;
 
             /* END XL */
@@ -180,9 +222,13 @@ namespace Projeto_DAD
 
 
             //new Thread(() => PingLoop()).Start();
-            new Thread(() => NetworkStatusLoop()).Start();
+            //new Thread(() => NetworkStatusLoop()).Start();
             new Thread(() => CheckPendings_thread()).Start();
-            //new Thread(() => CheckHellos_thread()).Start();
+
+            new Thread(() => ManagerMODE_thread()).Start();
+            //new Thread(() => CheckPendings_thread()).Start();
+
+            new Thread(() => CheckCommandsInQueueFromReplica_thread()).Start();
             //new Thread(() => CheckHellos_thread()).Start();
 
         }
@@ -201,7 +247,10 @@ namespace Projeto_DAD
         }
 
 
-        public static void CheckCommandsInQueueFromReplica_thread() //Check commands send by the replicas 
+        //===================================================================
+        //                       INTERPRET COMMANDS THREAD (RECEIVED FROM OTHER REPLICA)
+        //===================================================================
+        public static void CheckCommandsInQueueFromReplica_thread()
         {
             while (true)
             {
@@ -213,29 +262,38 @@ namespace Projeto_DAD
                     CommandReplicas cmd = ServerService.CommLayer_forReplica.RemoveFromCommandQueue();
                     switch (cmd.GetCommand())
                     {
-                        case "INVITE":
-                            if(cmd.GetProposedView().GetSequence() <= CurrentViewID.GetSequence())
+                        case "INVITE": //Underling Mode
+                            Console.WriteLine("Received an INVITE ");
+                            //UnderlingStart_SignalEvent.Set();
+
+                            if (cmd.GetProposedView().GetSequence() < CurrentViewID.GetSequence())
                             {
                                 //I Must send REFUSAL
-                                SendCommandsToReplica_thread(new CommandReplicas("REFUSAL", CurrentViewID, null, MyAddress, cmd.GetProposedView().GetNodeID()) );
+                                Console.WriteLine("Send REFUSAL ");
+                                SendCommandsToReplica_thread(new CommandReplicas("REFUSAL", CurrentViewID, null, MyAddress, MyID), cmd.GetURI() );
                             }
                             else
                             {
+                                MANAGER_MODE_STATE = MANAGER_MODE_STATE_BLOCK; //Blocks manager
+
                                 TmpView = cmd.GetProposedView();//temporary view
-                                SendCommandsToReplica_thread(new CommandReplicas("ACCEPTANCE", CurrentViewID, null, MyAddress, cmd.GetProposedView().GetNodeID()));
+                                Console.WriteLine("Sending ACCEPTANCE: " + CurrentViewID);
+                                SendCommandsToReplica_thread(new CommandReplicas("ACCEPTANCE", CurrentViewID, null, MyAddress, MyID), cmd.GetURI() );
                             }
                             break;
                         case "ACCEPTANCE":
-                            if (GetElementInPending(cmd.GetID())==true)//Is it in pendings
+                            Timeout t = new Timeout(cmd.GetID(), 0); //just to test if is in Pendings List
+                            
+                            //I´m waiting for ACCPETD REply
+                            for (int i = 0; i < GetPendingsSize(); ++i)
                             {
-                                Accepted.Add(cmd);
-                            }                          
-                            if (GetPendingsSize() == 0)
-                            {
-                                //No more answers to receive
-                                STATE_MACHINE_NETWORK = STATE_MACHINE_PROCESS_ACCEPTANCE;
-
+                                if (IsElementInPending(t) == true)
+                                {
+                                    RemoveElementInPending(i); //Remove dos pengings
+                                    Accepted.Add(cmd);
+                                }
                             }
+                            
                             break;
                         case "REFUSAL":
                             if (GetElementInPending(cmd.GetID()) == true)//Is it in pendings
@@ -267,14 +325,17 @@ namespace Projeto_DAD
                             {
                                 CurrentViewID.AddNodeInView(cmd.GetProposedView().GetElementOfView(i));
                             }
-                            STATE_MACHINE_NETWORK = STATE_MACHINE_KEEP_ALIVE;
+                            //STATE_MACHINE_NETWORK = STATE_MACHINE_KEEP_ALIVE;
                             break;
                     }
                 }
             }
         }
 
-        //Survey the Pending Queue (Commands without Reply)
+       
+        //===================================================================
+        //                       SURVEY THE PENDING LIST (INVITATION SEND)
+        //===================================================================
         private void CheckPendings_thread()
         {
             while (true)
@@ -282,7 +343,6 @@ namespace Projeto_DAD
                 
                 Console.WriteLine("Checking Pendings Waiting for Event");
 
-                //Semaphore_pending.WaitOne();
                 Pending_SignalEvent.WaitOne(); //There is at least one Pending answer after INVITE
                 Pending_SignalEvent.Reset();
 
@@ -290,7 +350,7 @@ namespace Projeto_DAD
                 {
                     Console.WriteLine("Checking Pendings has the Semaphore");
                     Console.WriteLine("NUmber of Pendings" + GetPendingsSize());
-                    if (GetPendingsSize() > 0)
+                    if (GetPendingsSize() > 0 && MANAGER_MODE_STATE==MANAGER_MODE_STATE_WAIT_FOR_ACCEPTANCE )
                     {
                         for (int i = 0; i < GetPendingsSize(); ++i)
                         {
@@ -299,11 +359,13 @@ namespace Projeto_DAD
                     }
                     else
                     {
-                        Console.WriteLine("Checking Pendings FREED the Semaphore");
+                        Console.WriteLine("ALL Pendings Solved");
+                        PendingEmpty_SignalEvent.Set();
+                        break;
                         //Semaphore_pending.Release(1);
 
                     }
-                    Thread.Sleep(500);
+                    Thread.Sleep(50);
                 }
             }
         }
@@ -331,36 +393,35 @@ namespace Projeto_DAD
             }
         }
 
-        //Send Commands to replicas
-        private static void SendCommandsToReplica_thread(CommandReplicas cmd)
-        {
 
-            //Console.WriteLine("Sending INVITES to " + Server.AllServers[cmd.GetID()-1].UID.AbsoluteUri);
-            //Channel(cmd);
-            ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[cmd.GetID() - 1].UID.AbsoluteUri + "MyRemoteObjectName");
-          
+
+
+        //===================================================================
+        //                       SEND COMMANDS TO REPLICAS
+        //===================================================================
+        private static void SendCommandsToReplica_thread(CommandReplicas cmd, Uri End)
+        {
+            ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), End.AbsoluteUri + "MyRemoteObjectName");
 
             try
             {
                 switch (cmd.GetCommand())
                 {
                     case "INVITE":
-                        Console.WriteLine("Sending INVITES to " + Server.AllServers[cmd.GetID()-1].UID.AbsoluteUri);
+                        Console.WriteLine("Sending INVITES to " + End.AbsoluteUri);
 
                         obj.RX_ReplicaCommand(cmd); //Send
-                        InsertInPending( new Timeout(cmd.GetID(), 1000) ); //Timeout 1 [sec]. Push to Pendings
+                        InsertInPending( new Timeout(cmd.GetID(), TTL) ); //Timeout 1 [sec]. Push to Pendings
                         ++Sent_INVITEMessagesCount;
 
                         if(GetPendingsSize() == 1)
                         {
                             Pending_SignalEvent.Set(); //Signal at least one message sent
                         }
-                        
-                        
-
                         break;
                     case "ACCEPTANCE":
-                        obj.RX_ReplicaCommand(cmd); //Send
+                        obj.RX_ReplicaCommand(cmd); //Send 
+                        UnderlingStart_SignalEvent.Set();
                         break;
                     case "HELLO":
                         obj.RX_ReplicaCommand(cmd);
@@ -378,13 +439,164 @@ namespace Projeto_DAD
             }
             catch(Exception e)
             {
-                if (cmd.GetCommand() == "INVITE")
+                switch (cmd.GetCommand())
                 {
-                    ++NotSent_INVITEMessagesCount;
+                    case "INVITE":
+                        ++NotSent_INVITEMessagesCount;
+                        if (NotSent_INVITEMessagesCount == Server.AllServers.Count - 1)//Test if all messages failed
+                        {
+                            PendingEmpty_SignalEvent.Set();
+                        }
+                        break;
+                    case "ACCEPTANCE":
+                        UnderlingMustNotStart_SignalEvent.Set();
+                        break;
                 }
-                //Console.WriteLine(e);
             }
         }
+
+
+        //===================================================================
+        //                       UNDERLING 
+        //===================================================================
+        private static void UnderlingMODE()
+        {
+
+            while (true)
+            {
+                UnderlingStart_SignalEvent.WaitOne(); //When power up. It starts in Manager Mode
+                UnderlingStart_SignalEvent.Reset();
+
+                //I'm waiting for a commit
+
+
+
+            }
+        }
+
+
+        //===================================================================
+        //                       Manager
+        //===================================================================
+        private static void ManagerMODE_thread()
+        {
+            while (true)
+            {
+                switch (MANAGER_MODE_STATE)
+                {
+                    case MANAGER_MODE_STATE_BLOCK:
+                        UnderlingMustNotStart_SignalEvent.WaitOne(); //When power up. It starts in Manager Mode
+                        UnderlingMustNotStart_SignalEvent.Reset();
+                        MANAGER_MODE_STATE = MANAGER_MODE_STATE_SEND_INVITATION;
+                        break;
+                    case MANAGER_MODE_STATE_SEND_INVITATION:
+                        Console.WriteLine("IN Manager MODE: Sending INVITES");
+
+                        ProposedViewID.IncSequence(); //Propose viewID+1
+                        PendingReplyFromServers.Clear();
+                        Accepted.Clear();
+                        ErasePendings(); //Erase pendings
+                        Sent_INVITEMessagesCount = 0;
+                        NotSent_INVITEMessagesCount = 0;
+                        EraseHellos();
+
+                        for (int i = 0; i < Server.AllServers.Count; i++)
+                        {
+                            if (Server.AllServers[i].ID == Server.My_Identification.ID) //Avoid ping himself
+                            {
+                                continue;
+                            }
+
+                            SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, MyID), Server.AllServers[i].UID);
+                        }
+                        MANAGER_MODE_STATE = MANAGER_MODE_STATE_WAIT_FOR_ACCEPTANCE;
+                        break;
+                    case MANAGER_MODE_STATE_WAIT_FOR_ACCEPTANCE:
+                        //Thread.Sleep(30000);//30 seg to receive all ACCEPTED
+                        //Bloqueado à espera de evento de pendings EMPTY
+                        Console.WriteLine("Waiting for ACCEPTANCE");
+                        PendingEmpty_SignalEvent.WaitOne();
+                        PendingEmpty_SignalEvent.Reset();
+                        Console.WriteLine("PROCESSING ACCEPTANCE");
+
+                        if (Accepted.Count > (Sent_INVITEMessagesCount / 2))
+                        {
+                            int pos_tmp = 0;
+                            int sequence_tmp = CurrentViewID.GetSequence();
+                            bool flag = false;
+
+                            for (int i = 0; i < Accepted.Count; ++i)
+                            {
+                                if (Accepted[i].GetProposedView().GetSequence() <= CurrentViewID.GetSequence())
+                                {
+                                    continue; //Ignores ViewID inferior than the current
+                                }
+                                else
+                                {
+                                    if (Accepted[i].GetProposedView().GetSequence() > sequence_tmp)
+                                    {
+                                        sequence_tmp = Accepted[i].GetProposedView().GetSequence();
+                                        pos_tmp = i;
+                                        flag = true;
+                                    }
+                                }
+                            }
+                            //Initializes everything
+                            if (flag == true)
+                            {
+                                ServerService.ts = Accepted[pos_tmp].GetTSS(); //Update Tuplespace
+                                CurrentViewID.ClearView();
+                                for (int i = 0; i < Accepted[pos_tmp].GetProposedView().GetSizeOfView(); ++i)
+                                {
+                                    CurrentViewID.AddNodeInView(Accepted[pos_tmp].GetProposedView().GetElementOfView(i));
+                                }
+
+                                ProposedViewID = CurrentViewID;
+                                for (int i = 0; i < CurrentViewID.GetSizeOfView(); ++i)
+                                {
+                                    int tmp = CurrentViewID.GetElementOfView(i);
+                                    if (tmp == MyID)
+                                    {
+                                        continue;
+                                    }
+                                    SendCommandsToReplica_thread(new CommandReplicas("COMMIT", CurrentViewID, ServerService.ts, MyAddress, MyID), Server.AllServers[i].UID);
+                                }
+                                MANAGER_MODE_STATE = MANAGER_MODE_STATE_KEEP_ALIVE;
+                            }
+                        }
+                        else
+                        {
+                            Random r = new Random();
+                            int delay = r.Next(10000);
+                            Console.WriteLine("Alone Node. Will retry again in {0} miliseconds", delay);
+                            Thread.Sleep(delay);
+                            MANAGER_MODE_STATE = MANAGER_MODE_STATE_SEND_INVITATION; //Starts all over again with new Proposed ViewID
+                        }
+                        break;
+                    case MANAGER_MODE_STATE_KEEP_ALIVE:
+                        Thread.Sleep(500);//Send keep alive in 0.5 seconds
+                        for (int i = 0; i < CurrentViewID.GetSizeOfView(); ++i)
+                        {
+                            int tmp = CurrentViewID.GetElementOfView(i);
+                            if (tmp == MyID)
+                            {
+                                continue;
+                            }
+                            Hello[i] = new Timeout(tmp, 1000);
+                            //new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, ServerService.ts, MyAddress, tmp))).Start();
+                            SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, null, MyAddress, MyID), Server.AllServers[i].UID);
+                        }
+                        break;
+                    default:
+                        Console.WriteLine("============= MANAGER_MODE ============= DEFAULT");
+                        break;
+                }
+            }
+        }
+
+
+
+
 
 
         //===================================================================
@@ -393,7 +605,7 @@ namespace Projeto_DAD
         private static void NetworkStatusStateMachine()
         {
 
-            Console.WriteLine("STATE: " + STATE_MACHINE_NETWORK);
+            //Console.WriteLine("STATE: " + STATE_MACHINE_NETWORK);
             switch (STATE_MACHINE_NETWORK)
             {
                 case STATE_MACHINE_NETWORK_START: // Send INVITE for all
@@ -413,7 +625,7 @@ namespace Projeto_DAD
                             continue;
                         }
 
-                        SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, Server.AllServers[i].ID));
+                        SendCommandsToReplica_thread(new CommandReplicas("INVITE", ProposedViewID, null, MyAddress, MyID), Server.AllServers[i].UID);
                     }
                     STATE_MACHINE_NETWORK = STATE_MACHINE_WAIT_ACCEPTANCE;
                     break;
@@ -422,6 +634,7 @@ namespace Projeto_DAD
                     if( NotSent_INVITEMessagesCount==Server.AllServers.Count-1) //I´m ALONE
                     {
                         NotSent_INVITEMessagesCount = 0;
+                        Console.WriteLine("I´m ALONE");
                         STATE_MACHINE_NETWORK = STATE_MACHINE_IM_ALONE;                         
                     }
 
@@ -466,7 +679,7 @@ namespace Projeto_DAD
                                 {
                                     continue;
                                 }
-                                new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("COMMIT", CurrentViewID, ServerService.ts, MyAddress, tmp))).Start();
+                                //new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("COMMIT", CurrentViewID, ServerService.ts, MyAddress, tmp))).Start();
                             }                               
                             STATE_MACHINE_NETWORK = STATE_MACHINE_KEEP_ALIVE;
                         }
@@ -484,11 +697,11 @@ namespace Projeto_DAD
                         }
                         Hello[i] = new Timeout(tmp, 1000);
                         //new Thread(() => SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, ServerService.ts, MyAddress, tmp))).Start();
-                        SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, ServerService.ts, MyAddress, tmp));
+                        //SendCommandsToReplica_thread(new CommandReplicas("HELLO", CurrentViewID, ServerService.ts, MyAddress, tmp));
                     }
                     break;
                 case STATE_MACHINE_IM_ALONE:
-                    Console.WriteLine("I´m ALONE");
+                    
                     
                     break;
 
