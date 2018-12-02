@@ -47,5 +47,10 @@ namespace Projeto_DAD
         {
             return Sender_id;
         }
+
+        public override string ToString()
+        {
+            return "<" + cmd + "," + Sender_uri + ">";
+        }
     }
 }
