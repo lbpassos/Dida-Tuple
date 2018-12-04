@@ -5,13 +5,12 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.IO;
-using System.Xml;
 using System.Net;
 using System.Net.Sockets;
 
@@ -26,11 +25,10 @@ namespace Projeto_DAD
         //private const int port_PCS = 1000; //Port in the PCS
         private const string PCS_Local_address= "tcp://localhost:10000/MyRemoteObjectName";
 
-        private string typeOfExecution;
         private string filePath;
 
         
-
+        private bool button_nextStep_WasClicked = false;
 
         private List<string> commandList = new List<string>();
 
@@ -61,7 +59,7 @@ namespace Projeto_DAD
                 textBox_Browse.AppendText(filePath);
                 sr.Close();
 
-                ////Scanner for XML file
+                //Scanner for XML file
                 //XmlDocument xmlDoc = new XmlDocument();
                 //xmlDoc.Load(filePath);
                 //typeOfExecution = xmlDoc.DocumentElement.SelectSingleNode("type").InnerText;  //Verifica qual o tipo de execução que o PM vai fazer, Sequence ou Step by Step
@@ -80,16 +78,17 @@ namespace Projeto_DAD
                     {
                         commandList.Add(line);
                     }
-
+  
                 }
 
-                button_Send.Enabled = true;
+                button_Sequence.Enabled = true;
+                button_Step.Enabled = true;
             }
         }
 
-        private void button_Send_Click(object sender, EventArgs e)
+        private void button_Sequence_Click(object sender, EventArgs e)
         {
-            textBox_Browse.Enabled = false;
+            button_Step.Enabled = false;
             foreach (string command in commandList)
             {
                 Console.WriteLine(command);
@@ -97,10 +96,29 @@ namespace Projeto_DAD
             }
         }
 
-
-        private void GUI_Client_Load(object sender, EventArgs e)
+        private void button_Step_Click(object sender, EventArgs e)
         {
+            button_Sequence.Enabled = false;
+            button_NextStep.Enabled = true;
 
+            new Thread(() => _wasCliked(button_Step,button_NextStep)) { IsBackground = true }.Start();
+
+        }
+
+        private void button_NextStep_Click(object sender, EventArgs e)
+        {
+            button_nextStep_WasClicked = true;
+        }
+
+        private void _wasCliked(Button buttonStep,Button buttonNextStep)
+        {
+            foreach (string command in commandList)
+            {
+                while (button_nextStep_WasClicked == false) ;
+                Console.WriteLine(command);
+                checkLine(command);
+                button_nextStep_WasClicked = false;
+            }
         }
 
 
@@ -116,7 +134,6 @@ namespace Projeto_DAD
         {
 
         }
-
 
         public void checkLine(String line)
         {
@@ -229,5 +246,11 @@ namespace Projeto_DAD
                     break;
             }
         }// end_checkline
+
+        private void GUI_Client_Load(object sender, EventArgs e)
+        {
+
+        }
+
     }
 }

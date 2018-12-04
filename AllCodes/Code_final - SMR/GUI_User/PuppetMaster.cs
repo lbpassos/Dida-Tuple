@@ -5,7 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -28,7 +28,7 @@ namespace Projeto_DAD
         private string filePath;
 
         
-
+        private bool button_nextStep_WasClicked = false;
 
         private List<string> commandList = new List<string>();
 
@@ -81,27 +81,44 @@ namespace Projeto_DAD
   
                 }
 
-                button_Send.Enabled = true;
+                button_Sequence.Enabled = true;
+                button_Step.Enabled = true;
             }
         }
 
-        private void button_Send_Click(object sender, EventArgs e)
+        private void button_Sequence_Click(object sender, EventArgs e)
         {
+            button_Step.Enabled = false;
+            foreach (string command in commandList)
+            {
+                Console.WriteLine(command);
+                checkLine(command);
+            }
+        }
 
-                textBox_Browse.Enabled = false;
-                foreach (string command in commandList)
-                {
-                    Console.WriteLine(command);
-                    checkLine(command);
-                }
+        private void button_Step_Click(object sender, EventArgs e)
+        {
+            button_Sequence.Enabled = false;
+            button_NextStep.Enabled = true;
 
+            new Thread(() => _wasCliked(button_Step,button_NextStep)) { IsBackground = true }.Start();
 
         }
 
-
-        private void GUI_Client_Load(object sender, EventArgs e)
+        private void button_NextStep_Click(object sender, EventArgs e)
         {
+            button_nextStep_WasClicked = true;
+        }
 
+        private void _wasCliked(Button buttonStep,Button buttonNextStep)
+        {
+            foreach (string command in commandList)
+            {
+                while (button_nextStep_WasClicked == false) ;
+                Console.WriteLine(command);
+                checkLine(command);
+                button_nextStep_WasClicked = false;
+            }
         }
 
 
@@ -117,7 +134,6 @@ namespace Projeto_DAD
         {
 
         }
-
 
         public void checkLine(String line)
         {
@@ -230,5 +246,11 @@ namespace Projeto_DAD
                     break;
             }
         }// end_checkline
+
+        private void GUI_Client_Load(object sender, EventArgs e)
+        {
+
+        }
+
     }
 }
