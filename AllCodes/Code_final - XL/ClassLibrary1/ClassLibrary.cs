@@ -7,12 +7,14 @@ namespace Projeto_DAD
 {
     public interface IServerServices
     {
+
+
+        void RX_ReplicaCommand(object cmd); //Receive commands from other replicas
+        bool IsRoot();
         
-        //bool isRoot(); //check if node is root
 
-        //void Ping();
 
-        void RX_ReplicaCommand(object cmd);
+
         void SinkFromReplicas(object cmd);
         
         void RX_Command(Command cmd); //Receive Commands do cliente

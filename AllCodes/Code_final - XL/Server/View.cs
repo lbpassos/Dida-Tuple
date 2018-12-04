@@ -18,7 +18,9 @@ namespace Projeto_DAD
         {
             NodeId = Nid;
             NodesInView = new ArrayList();
-            NodesInView.Add(Nid); //starts with the only node
+            //NodesInView.Add(Nid); //starts with the only node
+            
+            NodesInView.Add(NodeId); //Add(NodeId);
             Sequence = 1;
 
         }
@@ -27,16 +29,20 @@ namespace Projeto_DAD
         {
             return NodeId;
         }
-        public void ClearView()
+        /*public void ClearView()
         {
             NodesInView.Clear();
             NodesInView.Add(NodeId); //starts with the only node
-        }
-        public void AddNodeInView(int NodeId)
+        }*/
+        public void AddNodeInView(int n)
         {
-            NodesInView.Add(NodeId);
+            NodesInView.Add(n);
+            
         }
-
+        public void RemoveNode(int id)
+        {
+            NodesInView.Remove(id);
+        }
         public int GetSizeOfView()
         {
             return NodesInView.Count;
@@ -61,7 +67,13 @@ namespace Projeto_DAD
         }
         public override string ToString()
         {
-            return "<" + Sequence + "," + NodeId + ">";
+            string tmp = "<" + Sequence + "," + NodeId + ">" + "[ ";
+            foreach(int s in NodesInView)
+            {
+                tmp += s + " ";
+            }
+            tmp += "]";
+            return tmp;
         }
         public override bool Equals(object obj)
         {

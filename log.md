@@ -1,5 +1,8 @@
 # Log
 
+- **4-12**
+  - XL View detection done. Fault Tolerant version needs improvement in the star mode
+  
 - **22-11**
   - SMR done. Needs further testing
   

@@ -37,6 +37,21 @@ namespace Projeto_DAD
             get { return id; }
             set { id = value; }
         }
+
+        public override bool Equals(object obj)
+        {
+            EachServer a = obj as EachServer;
+            if (a == null)
+            {
+                return false;
+            }
+            return id == a.ID;
+        }
+
+        public override int GetHashCode()
+        {
+            return ID.GetHashCode() + UID.GetHashCode();
+        }
     }
 
 
@@ -112,8 +127,8 @@ namespace Projeto_DAD
             ChannelServices.RegisterChannel(channel, false);
 
             new Thread(() => Server_thread()).Start();
-           new Thread(() => Client_thread(uri, id)).Start();
-           //new Thread(() => ServerService.CheckCommandsInQueue_thread()).Start();
+            new Thread(() => Client_thread(uri, id)).Start();
+            new Thread(() => ServerService.CheckCommandsInQueue_thread()).Start();
 
             System.Console.WriteLine("I'm server: " + args[1]);
             System.Console.ReadLine();
