@@ -9,15 +9,20 @@ namespace Projeto_DAD
     {
 
 
-        void RX_ReplicaCommand(object cmd); //Receive commands from other replicas
-        bool IsRoot();
+        void RX_ReplicaCommand(object cmd); 
+        //Receive commands from other replicas
+        //bool IsRoot();
         
+        //============================= NEW IMPLEMENTATION ===============
+        void Ping();
+        void RX_Command(Command cmd); //Receive Commands do cliente
+        //============================= END NEW IMPLEMENTATION ===============
 
 
 
         void SinkFromReplicas(object cmd);
         
-        void RX_Command(Command cmd); //Receive Commands do cliente
+       
         Object[] getImage(); //Request on Init
         void TakeCommand(Command cmd);//Get Commands from ROOT
 
@@ -405,12 +410,14 @@ namespace Projeto_DAD
         private string cmd;
         private object payload;
         private Uri uri;
+        private int Sequence;
 
-        public Command(string command, object tuple, Uri add)
+        public Command(string command, object tuple, Uri add, int seq)
         {
             cmd = command;
             payload = tuple;
             uri = add;
+            Sequence = seq;
         }
 
         public string GetCommand()
@@ -426,6 +433,30 @@ namespace Projeto_DAD
         public Uri GetUriFromSender()
         {
             return uri;
+        }
+
+        public int GetSequenceNumber()
+        {
+            return Sequence;
+        }
+
+        public override bool Equals(object obj)
+        {
+            Command a = obj as Command;
+            if (a == null)
+            {
+                return false;
+            }
+            if( cmd.Equals(a.GetCommand())==true &&  uri.Equals(a.GetUriFromSender())==true && Sequence==a.GetSequenceNumber())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return cmd.GetHashCode() + uri.GetHashCode() + Sequence.GetHashCode();
         }
     }
 

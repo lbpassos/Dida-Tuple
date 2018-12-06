@@ -13,12 +13,63 @@ using System.Diagnostics;
 
 namespace Projeto_DAD
 {
+
+    public class ThreadWithState
+    {
+        // State information used in the task.
+        private Command c;
+        private int serverPos;
+        private IServerServices ss;
+        private bool FlagStop;
+
+
+        // The constructor obtains the state information.
+        public ThreadWithState(Command comm, int sPos)
+        {
+            c = comm;
+            serverPos = sPos;
+            ss = (IServerServices)Activator.GetObject(typeof(IServerServices), ClientProgram.AllServers[serverPos] + "MyRemoteObjectName");
+            FlagStop = false;
+        }
+
+        public void Kill_hread()
+        {
+            FlagStop = true;
+        }
+
+        // The thread procedure performs the task
+        public void TX_Command_thread()
+        {
+            while (!FlagStop)
+            {
+                try
+                {
+                    Console.WriteLine("Trying to connect to: " + ClientProgram.AllServers[serverPos]);
+
+                    ss.RX_Command(c);
+                    Console.WriteLine("Connected to :" + ClientProgram.AllServers[serverPos]);
+
+                }
+                catch (System.Net.Sockets.SocketException e)
+                {
+                    //Keep
+                }
+                Thread.Sleep(2000);//2 seconds
+            }
+        }
+    }
+
+
     class ClientProgram
     {
         private IServerServices ss;
         private ClientServices cs;
-        private string RootServer;
-        public List<string> AllServers;    //All servers present in the pool
+
+        private int ServerToConnect; //Server to connect
+        private int SequenceNumber = 0; //Sequence number of the commands
+        private List<SenderPool> ThreadsInAction;
+
+        public static List<string> AllServers;    //All servers present in the pool
         private const string path = "..\\..\\..\\Filedatabase\\database.txt"; //database of all servers
         private const int Timeout = 5000; //miliseconds
 
@@ -75,6 +126,8 @@ namespace Projeto_DAD
                     return;
                 }
             }
+
+            ThreadsInAction = new List<SenderPool>();
         }
 
 
@@ -83,6 +136,8 @@ namespace Projeto_DAD
             BlockUntilAnswer = true;
         }
 
+        
+        
         /// <summary>
         /// Execute the command. Sends to Server
         /// </summary>
@@ -90,8 +145,8 @@ namespace Projeto_DAD
         /// <param name="t"></param>
         private void Execute(string command, MyTuple t)
         {
-            /*Console.WriteLine("EXECUTAR");
-            Command c;// = new Command(command, t, MyAddress);
+            Console.WriteLine("EXECUTAR");
+            Command c = new Command(command, t, MyAddress, SequenceNumber);
             Stopwatch sw = new Stopwatch();
 
             while (true)
@@ -102,16 +157,17 @@ namespace Projeto_DAD
                         switch (command)
                         {
                             case "read":
-                                for (int i = 0; i < Server.AllServers.Count; i++)
+                                for (int i = 0; i < AllServers.Count; i++)
                                 {
-                                    
+                                    ThreadWithState tws = new ThreadWithState(c, i);
+                                    Thread td = new Thread(new ThreadStart(tws.TX_Command_thread));
+                                    ThreadsInAction.Add( new SenderPool(td, c) );
                                 }
-                                    //ss.RX_Command(c);
-                                STATE_EXECUTE = STATE_WAIT_FOR_REPLY_READ;
+                                //STATE_EXECUTE = STATE_WAIT_FOR_REPLY_READ;
                                 break;
                         }
                         break;
-                    case STATE_WAIT_FOR_REPLY_READ:
+                    /*case STATE_WAIT_FOR_REPLY_READ:
                         if(BlockUntilAnswer == true)
                         {
                             return; //Answer received
@@ -122,12 +178,12 @@ namespace Projeto_DAD
                             STATE_EXECUTE = STATE_COMMAND; //No reply was received. send again
                             break;
                         }
-                        break;
+                        break;*/
                 }
 
 
 
-                try
+                /*try
                 {
                     Command c = new Command(command, t, MyAddress);
                     ss.RX_Command(c);
@@ -150,8 +206,8 @@ namespace Projeto_DAD
                             //break;
                         }
                     }
-                }
-            }*/
+                }*/
+            }
         }
         
 
@@ -174,7 +230,7 @@ namespace Projeto_DAD
                         }
                         break;
                     case STATE_READ_CLIENT_SCRIPT:          //Está martelado, fica assim, caso tenhamos tempo otimizo depois
-                        script_comands = ReadScriptFile(clientScript_path);
+                        /*script_comands = ReadScriptFile(clientScript_path);
                         foreach (string linha in script_comands)
                         {
                             results = linha.Split(' ');
@@ -236,7 +292,7 @@ namespace Projeto_DAD
                                         break;
                                 }
                             }
-                        }
+                        }*/
 
                         STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                         break;
@@ -268,23 +324,23 @@ namespace Projeto_DAD
                        
                         switch (results[0])
                         {
-                            case "add":
+                            /*case "add":
                                 Execute("add", tuple);
                                 if (START_CICLE == true)
                                 {
                                     CommandsInCycle.Add(new Command("add", tuple, null));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
-                                break;
+                                break;*/
                             case "read":
                                 Execute("read",tuple);
                                 if (START_CICLE == true)
                                 {
-                                    CommandsInCycle.Add(new Command("read", tuple, null));
+                                    CommandsInCycle.Add(new Command("read", tuple, null, -1));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                                 break;
-                            case "take":
+                            /*case "take":
                                 Execute("take",tuple);
                                 if (START_CICLE == true)
                                 {
@@ -309,7 +365,7 @@ namespace Projeto_DAD
                                 START_CICLE = false;
                                 --NumberOfCycles;
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_CYCLE;
-                                break;
+                                break;*/
                             default:
                                 Console.WriteLine("Wrong type of command!");
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
@@ -462,44 +518,37 @@ namespace Projeto_DAD
 
         private bool SearchForRootServer()
         {
-            /*int i = 0;
+            Random r = new Random();
+            ServerToConnect = r.Next(0, AllServers.Count); //connect to random server in pool
+
+            int i = 0;
             while (i < AllServers.Count)
             {
+                
                 try
                 {
-                    Console.WriteLine("Trying to connect to: " + AllServers[i]);
+                    Console.WriteLine("Trying to connect to: " + AllServers[ServerToConnect]);
                     ss = (IServerServices)Activator.GetObject(typeof(IServerServices), AllServers[i] + "MyRemoteObjectName");
-                    if (ss.isRoot() == true)
-                    {
-                        Console.WriteLine("Connected to :" + AllServers[i]);
-                        RootServer = AllServers[i];
+                    ss.Ping();
+                    Console.WriteLine("Connected to :" + AllServers[ServerToConnect]);
 
-                        Console.WriteLine(RootServer + " is the ROOT Server");
-                        RemotingServices.Marshal(cs, "MyRemoteObjectName", typeof(ClientServices));
-                        //new Thread(() => PingLoop()).Start();
-                        //STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
-                        break;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Connected to :" + AllServers[i]);
-                        Console.WriteLine(AllServers[i] + "is NOT the ROOT Server");
-                    }
+                    RemotingServices.Marshal(cs, "MyRemoteObjectName", typeof(ClientServices));
+                    break;
+                    
 
                 }
                 catch (System.Net.Sockets.SocketException e)
                 {
-                    Console.WriteLine("The server: " + AllServers[i] + " is not available");
+                    Console.WriteLine("The server: " + AllServers[ServerToConnect] + " is not available");
+                    i = (i + 1) % AllServers.Count;
+                    if (i == 0)
+                    {
+                        return false;
+                    }
+                    ServerToConnect = (ServerToConnect + 1) % AllServers.Count;
                 }
-
-                i = (i + 1) % AllServers.Count;
-                if (i == 0)
-                {
-                    return false;
-                }
-            }*/
+            }
             return true;
-
         }
 
 
