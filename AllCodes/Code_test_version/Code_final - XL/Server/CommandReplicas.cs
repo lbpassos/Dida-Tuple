@@ -52,20 +52,5 @@ namespace Projeto_DAD
         {
             return "<" + cmd + "," + Sender_uri + ">";
         }
-
-        public override bool Equals(object obj)
-        {
-            CommandReplicas a = obj as CommandReplicas;
-            if (a == null)
-            {
-                return false;
-            }
-            return Sender_id == a.Sender_id;
-        }
-
-        public override int GetHashCode()
-        {
-            return Sender_id.GetHashCode();
-        }
     }
 }

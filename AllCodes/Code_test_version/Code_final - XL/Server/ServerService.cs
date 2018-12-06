@@ -15,7 +15,6 @@ namespace Projeto_DAD
         private static bool MustFreeze = false;
         //private static bool Root = false;
         private static int DelayMessagesTime;
-        //public static bool IgnoreInbound = true;
 
 
         /* XL */
@@ -32,7 +31,7 @@ namespace Projeto_DAD
         public void RX_ReplicaCommand(object cmd) //Receive commands from other replicas
         {
             CommandReplicas a = cmd as CommandReplicas;
-            if (a == null /*|| IgnoreInbound==true*/)
+            if (a == null)
             {
                 return;
             }
@@ -41,7 +40,76 @@ namespace Projeto_DAD
 
         }
 
-        
+        public static void CheckCommandsInQueue_thread()
+        {
+            while (true)
+            {
+                while (MustFreeze == true) ; //FREEZE ****************************
+                Thread.Sleep(50);//Min time to check commands
+                if (CommLayer_forReplica.GetQueueSize() > 0) //if there is commands
+                {
+                    CommandReplicas cmd = CommLayer_forReplica.RemoveFromCommandQueue();
+                    //MyTuple payload = (MyTuple)cmd.GetPayload();
+                    //Object tmp;
+
+                    switch (cmd.GetCommand())
+                    {
+                        case "REGISTER":
+                            Console.WriteLine("START ========= REGISTER");
+                            if (ServerProgram.AmIRoot() == true)
+                            {
+                                View tmp = ServerProgram.GetCurrentViewID();
+                                tmp.AddNodeInView(cmd.GetID()); //Add node to the current view
+                                ServerProgram.SetCurrentViewID(tmp); //View update
+
+                                Console.WriteLine("============ REGISTER ===========", tmp);
+
+                                GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("REGISTER_ACK", ServerProgram.GetCurrentViewID(), ts, ServerProgram.GetMyAddress(), ServerProgram.GetMyId()));
+                                ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_INFORM_VIEW_CHANGE);
+                            }
+                            break;
+                        case "REGISTER_ACK":
+
+                            Console.WriteLine("Antes ----- REGISTER_ACK");
+
+                            //if ( ServerProgram.GetStateMachine()==ServerProgram.STATE_MACHINE_NETWORK_WAIT_FOR_ANSWER_INIT )
+                            ServerProgram.Pending_SignalEvent.WaitOne();
+                            ServerProgram.Pending_SignalEvent.Reset();
+                            //{
+                                Console.WriteLine("No If ----- REGISTER_ACK + ID_DO_ROOT: " + cmd.GetID());
+
+                                ServerProgram.SetCurrentViewID(cmd.GetProposedView()); //View update
+                                ts = cmd.GetTSS();
+                                ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_CHECK_ROOT);
+                                ServerProgram.DefineRootId(cmd.GetID());
+                            ServerProgram.CommandAvailable_SignalEvent.Set();
+                            //}
+                            break;
+                        case "CHECK_ROOT":
+                            break;
+                        case "CHECK":
+                            break;
+                        case "VIEW_CHANGE":
+                            ServerProgram.SetCurrentViewID( cmd.GetProposedView() ); //View update
+                            break;
+                        
+
+
+
+
+
+                        
+                    }
+                }
+            }
+        }
+
+        public bool IsRoot()
+        {
+            return ServerProgram.AmIRoot();
+        }
+
+
 
 
 
@@ -96,7 +164,8 @@ namespace Projeto_DAD
             }
 
             while (MustFreeze == true) ; //Freeze
-            ServerProgram.InsertCommand(a);
+            Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
+            CommLayer_forReplica.InsertCommand(a);
 
             /*if (mt != null)
             {
@@ -114,7 +183,7 @@ namespace Projeto_DAD
         private static void GiveBackResultToReplica(Uri uri, CommandReplicas cm)
         {
 
-            IServerServices obj = (IServerServices)Activator.GetObject(typeof(IServerServices), uri.AbsoluteUri + "MyRemoteClient");
+            IServerServices obj = (IServerServices)Activator.GetObject(typeof(IServerServices), uri.AbsoluteUri + "MyRemoteObjectName");
             obj.SinkFromReplicas(cm);
 
         }

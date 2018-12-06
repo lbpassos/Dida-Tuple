@@ -46,10 +46,6 @@ namespace Projeto_DAD
             return CommandQueue.Count;
         }
 
-        public void Erase()
-        {
-            CommandQueue.Clear();
-        }
  
     }
 

@@ -12,14 +12,14 @@ namespace Projeto_DAD
     {
         private Stopwatch st;
         private int id;
-        private long Timeout_ms;
+        private int Timeout_ms;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="i">ServerID</param>
         /// <param name="t">Timeout constant</param>
-        public Timeout(int i, long t)
+        public Timeout(int i, int t)
         {
             st = Stopwatch.StartNew();
             id = i;
