@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Runtime.Remoting;
 using System.Threading;
 using System.Diagnostics;
+using System.Runtime.Remoting.Messaging;
 
 namespace Projeto_DAD
 {
@@ -21,6 +22,8 @@ namespace Projeto_DAD
         private int serverPos;
         private IServerServices ss;
         private bool FlagStop;
+
+        public delegate bool MyDelegate(Command c);
 
 
         // The constructor obtains the state information.
@@ -40,13 +43,19 @@ namespace Projeto_DAD
         // The thread procedure performs the task
         public void TX_Command_thread()
         {
+            Console.WriteLine("comecei ");
+            AsyncCallback cb = new AsyncCallback(MyCallBack);
+            MyDelegate d = new MyDelegate(ss.RX_Command);
             while (!FlagStop)
             {
+                Thread.Sleep(2000);//2 seconds
                 try
                 {
                     Console.WriteLine("Trying to connect to: " + ClientProgram.AllServers[serverPos]);
 
-                    ss.RX_Command(c);
+                    
+                    IAsyncResult ar = d.BeginInvoke(c, cb, null);
+                    
                     Console.WriteLine("Connected to :" + ClientProgram.AllServers[serverPos]);
 
                 }
@@ -54,8 +63,17 @@ namespace Projeto_DAD
                 {
                     //Keep
                 }
-                Thread.Sleep(2000);//2 seconds
+                //Thread.Sleep(60000);//2 seconds
             }
+            Console.WriteLine("Terminei de mandar para: " + ClientProgram.AllServers[serverPos]);
+        }
+
+        public static void MyCallBack(IAsyncResult ar)
+        {
+            MyDelegate d = (MyDelegate)((AsyncResult)ar).AsyncDelegate;
+            d.EndInvoke(ar);
+            //Console.WriteLine( "Ola" + );
+            
         }
     }
 
@@ -67,7 +85,9 @@ namespace Projeto_DAD
 
         private int ServerToConnect; //Server to connect
         private int SequenceNumber = 0; //Sequence number of the commands
-        private List<SenderPool> ThreadsInAction;
+        public static List<SenderPool> ThreadsInAction;
+
+        public static ManualResetEvent Pending_SignalEvent = new ManualResetEvent(false); //Pending thread can start
 
         public static List<string> AllServers;    //All servers present in the pool
         private const string path = "..\\..\\..\\Filedatabase\\database.txt"; //database of all servers
@@ -146,7 +166,7 @@ namespace Projeto_DAD
         private void Execute(string command, MyTuple t)
         {
             Console.WriteLine("EXECUTAR");
-            Command c = new Command(command, t, MyAddress, SequenceNumber);
+            Command c = new Command(command, t, MyAddress, ++SequenceNumber);
             Stopwatch sw = new Stopwatch();
 
             while (true)
@@ -157,28 +177,24 @@ namespace Projeto_DAD
                         switch (command)
                         {
                             case "read":
+                                Console.WriteLine("========================================");
                                 for (int i = 0; i < AllServers.Count; i++)
                                 {
                                     ThreadWithState tws = new ThreadWithState(c, i);
                                     Thread td = new Thread(new ThreadStart(tws.TX_Command_thread));
-                                    ThreadsInAction.Add( new SenderPool(td, c) );
+                                    
+                                    ThreadsInAction.Add( new SenderPool(tws, td, new Uri(AllServers[i]), c) );
+                                    td.Start();
                                 }
-                                //STATE_EXECUTE = STATE_WAIT_FOR_REPLY_READ;
+                                STATE_EXECUTE = STATE_WAIT_FOR_REPLY_READ;
                                 break;
                         }
                         break;
-                    /*case STATE_WAIT_FOR_REPLY_READ:
-                        if(BlockUntilAnswer == true)
-                        {
-                            return; //Answer received
-
-                        }
-                        if (sw.ElapsedMilliseconds > TIMEOUT_FOR_READ)
-                        {
-                            STATE_EXECUTE = STATE_COMMAND; //No reply was received. send again
-                            break;
-                        }
-                        break;*/
+                    case STATE_WAIT_FOR_REPLY_READ:
+                        Pending_SignalEvent.WaitOne();
+                        Pending_SignalEvent.Reset();
+                        STATE_EXECUTE = STATE_COMMAND;               
+                        return;
                 }
 
 
@@ -518,7 +534,7 @@ namespace Projeto_DAD
 
         private bool SearchForRootServer()
         {
-            Random r = new Random();
+            /*Random r = new Random();
             ServerToConnect = r.Next(0, AllServers.Count); //connect to random server in pool
 
             int i = 0;
@@ -547,7 +563,7 @@ namespace Projeto_DAD
                     }
                     ServerToConnect = (ServerToConnect + 1) % AllServers.Count;
                 }
-            }
+            }*/
             return true;
         }
 

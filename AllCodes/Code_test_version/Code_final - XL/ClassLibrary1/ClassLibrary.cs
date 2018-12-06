@@ -15,7 +15,7 @@ namespace Projeto_DAD
         
         //============================= NEW IMPLEMENTATION ===============
         void Ping();
-        void RX_Command(Command cmd); //Receive Commands do cliente
+        bool RX_Command(Command cmd); //Receive Commands do cliente
         //============================= END NEW IMPLEMENTATION ===============
 
 
@@ -34,7 +34,7 @@ namespace Projeto_DAD
 
     public interface IClientServices
     {
-        void sink(MyTuple mt);
+        void sink(Command mt);
 
         void freeze();
         void unfreeze();
@@ -428,6 +428,10 @@ namespace Projeto_DAD
         public object GetPayload()
         {
             return payload;
+        }
+        public void SetPayload(object p)
+        {
+            payload = p;
         }
 
         public Uri GetUriFromSender()

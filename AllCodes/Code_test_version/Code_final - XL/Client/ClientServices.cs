@@ -10,22 +10,46 @@ namespace Projeto_DAD
     class ClientServices : MarshalByRefObject, IClientServices
     {
         private bool MustFreeze = false;
+        private bool flag = false;
 
-        public void sink(MyTuple mt) //Receive answers
+        public void sink(Command mt) //Receive answers
         {
 
             while (MustFreeze == true) ; //Freeze
 
-            if (mt != null)
+
+            switch (mt.GetCommand())
             {
-                Console.WriteLine("(ClientServices) RECEBI: " + mt.ToString());
-                
+                case "read":
+                    for (int i = 0; i < ClientProgram.ThreadsInAction.Count; ++i)
+                    {
+                        if (ClientProgram.ThreadsInAction[i].Equals(new SenderPool(null, null, mt.GetUriFromSender(), mt) ) == true)
+                        {
+                            ClientProgram.ThreadsInAction[i].GetThreadState().Kill_hread();
+                            ClientProgram.ThreadsInAction[i].GetThread().Join();
+                            ClientProgram.ThreadsInAction.RemoveAt(i);
+                            ClientProgram.Pending_SignalEvent.Set();
+                            Console.WriteLine("(ClientServices) RECEBI: " + mt.GetPayload().ToString());
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (flag == true)
+                    {
+                        for (int i = 0; i < ClientProgram.ThreadsInAction.Count; ++i)
+                        {
+                            ClientProgram.ThreadsInAction[i].GetThreadState().Kill_hread();
+                            ClientProgram.ThreadsInAction[i].GetThread().Join();
+                            flag = false; ;
+                        }
+                        ClientProgram.ThreadsInAction.Clear();
+                    }
+                    break;
             }
-            else
-            {
-                Console.WriteLine("(ClientServices) NADA A RECEBER");
-            }
-            ClientProgram.AnswerIsReceived();
+            
+
+
+            
         }
 
         public void freeze()

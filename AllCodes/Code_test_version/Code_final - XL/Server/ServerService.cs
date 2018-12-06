@@ -11,14 +11,18 @@ namespace Projeto_DAD
     {
 
         public static TupleSpace ts = new TupleSpace();
-       // private static CommunicationLayer commLayer = new CommunicationLayer();
+        private static CommunicationLayer commLayer = new CommunicationLayer();
+        private static List<Command> CommandsAlreadyReceived = new List<Command>();
+
         private static bool MustFreeze = false;
         //private static bool Root = false;
         private static int DelayMessagesTime;
 
 
+
         /* XL */
-        public static CommunicationLayerReplica CommLayer_forReplica = new CommunicationLayerReplica(); //Replica channel
+        //public static CommunicationLayerReplica CommLayer_forReplica = new CommunicationLayerReplica(); //Replica channel
+
 
         public void Ping()
         {
@@ -36,7 +40,7 @@ namespace Projeto_DAD
                 return;
             }
             Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
-            CommLayer_forReplica.InsertCommand(a);
+            //CommLayer_forReplica.InsertCommand(a);
 
         }
 
@@ -46,52 +50,47 @@ namespace Projeto_DAD
             {
                 while (MustFreeze == true) ; //FREEZE ****************************
                 Thread.Sleep(50);//Min time to check commands
-                if (CommLayer_forReplica.GetQueueSize() > 0) //if there is commands
+                if (commLayer.GetQueueSize() > 0) //if there is commands
                 {
-                    CommandReplicas cmd = CommLayer_forReplica.RemoveFromCommandQueue();
-                    //MyTuple payload = (MyTuple)cmd.GetPayload();
-                    //Object tmp;
+                    Command cmd = commLayer.RemoveFromCommandQueue();
+                    MyTuple payload = (MyTuple)cmd.GetPayload();
+                    Object tmp;
 
                     switch (cmd.GetCommand())
                     {
-                        case "REGISTER":
+                        case "read":
                             Console.WriteLine("START ========= REGISTER");
-                            if (ServerProgram.AmIRoot() == true)
+
+                            tmp = ts.Read(payload);
+                            MyTuple a = tmp as MyTuple;
+
+                            if (CommandsAlreadyReceived.Contains(cmd) == false) //command first time received.
                             {
-                                View tmp = ServerProgram.GetCurrentViewID();
-                                tmp.AddNodeInView(cmd.GetID()); //Add node to the current view
-                                ServerProgram.SetCurrentViewID(tmp); //View update
+                                for(int i=0; i< CommandsAlreadyReceived.Count; ++i)
+                                {
+                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true)
+                                    {
+                                        CommandsAlreadyReceived.RemoveAt(i);
+                                        break;
+                                    }
+                                }
+                                CommandsAlreadyReceived.Add(cmd); //add
 
-                                Console.WriteLine("============ REGISTER ===========", tmp);
-
-                                GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("REGISTER_ACK", ServerProgram.GetCurrentViewID(), ts, ServerProgram.GetMyAddress(), ServerProgram.GetMyId()));
-                                ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_INFORM_VIEW_CHANGE);
+                                if (a == null) //object does not exist in the tuple space so we put in backlog
+                                {
+                                    commLayer.InsertInBackLog(cmd);
+                                    Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                                }
+                                else
+                                {
+                                    
+                                    GiveBackResult(cmd.GetUriFromSender(), new Command("read", a, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()) );
+                                }
                             }
+                            //Ignore command
                             break;
-                        case "REGISTER_ACK":
-
-                            Console.WriteLine("Antes ----- REGISTER_ACK");
-
-                            //if ( ServerProgram.GetStateMachine()==ServerProgram.STATE_MACHINE_NETWORK_WAIT_FOR_ANSWER_INIT )
-                            ServerProgram.Pending_SignalEvent.WaitOne();
-                            ServerProgram.Pending_SignalEvent.Reset();
-                            //{
-                                Console.WriteLine("No If ----- REGISTER_ACK + ID_DO_ROOT: " + cmd.GetID());
-
-                                ServerProgram.SetCurrentViewID(cmd.GetProposedView()); //View update
-                                ts = cmd.GetTSS();
-                                ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_CHECK_ROOT);
-                                ServerProgram.DefineRootId(cmd.GetID());
-                            ServerProgram.CommandAvailable_SignalEvent.Set();
-                            //}
-                            break;
-                        case "CHECK_ROOT":
-                            break;
-                        case "CHECK":
-                            break;
-                        case "VIEW_CHANGE":
-                            ServerProgram.SetCurrentViewID( cmd.GetProposedView() ); //View update
-                            break;
+                        
+                        
                         
 
 
@@ -165,7 +164,7 @@ namespace Projeto_DAD
 
             while (MustFreeze == true) ; //Freeze
             Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
-            CommLayer_forReplica.InsertCommand(a);
+            //CommLayer_forReplica.InsertCommand(a);
 
             /*if (mt != null)
             {
@@ -193,7 +192,24 @@ namespace Projeto_DAD
 
         /* END XL */
 
-        public void RX_Command(Command cmd) { } //Receive Commands do cliente
+        public bool RX_Command(Command cmd)//Receive Commands do cliente
+        {
+            Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
+
+            commLayer.InsertCommand(cmd);
+            
+            return true;
+        }
+        private static void GiveBackResult(Uri uri, Command mt)
+        {
+           
+            IClientServices obj = (IClientServices)Activator.GetObject(typeof(IClientServices), uri.AbsoluteUri + "MyRemoteClient");
+            obj.sink(mt);
+        }
+
+
+
+
         public Object[] getImage() { return null; } //Request on Init
         public void TakeCommand(Command cmd) { }//Get Commands from ROOT
 

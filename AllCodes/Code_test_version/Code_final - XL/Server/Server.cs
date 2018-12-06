@@ -131,6 +131,12 @@ namespace Projeto_DAD
             new Thread(() => ServerService.CheckCommandsInQueue_thread()).Start();
 
             System.Console.WriteLine("I'm server: " + args[1]);
+
+            //teste tuple space
+            object[] tupleOBJ = new object[1];
+            tupleOBJ[0] = new StringEmulator("a");
+            ServerService.ts.Add( new MyTuple(tupleOBJ) );
+
             System.Console.ReadLine();
         }
 

@@ -180,8 +180,9 @@ namespace Projeto_DAD
                     //Start searching for the Root
 
                     Console.WriteLine("================ STATE_MACHINE_NETWORK_START =============");
+                    Thread.Sleep(60000);
 
-                    serversAlive.Clear();
+                    /*serversAlive.Clear();
 
                     for (int i = 0; i < Server.AllServers.Count; i++)
                     {
@@ -264,7 +265,7 @@ namespace Projeto_DAD
                             }
 
                         }
-                    }
+                    }*/
 
                     break;
                 case STATE_MACHINE_NETWORK_UPDATE_ROOT:
