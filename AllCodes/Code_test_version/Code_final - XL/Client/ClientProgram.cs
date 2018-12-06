@@ -104,6 +104,8 @@ namespace Projeto_DAD
 
         private const int STATE_COMMAND = 0;
         private const int STATE_WAIT_FOR_REPLY_READ = 1;
+        private const int STATE_WAIT_FOR_REPLY_ADD = 2;
+
         private int STATE_EXECUTE = STATE_COMMAND;
         private int TIMEOUT_FOR_READ = 5000; //5 s
 
@@ -177,7 +179,7 @@ namespace Projeto_DAD
                         switch (command)
                         {
                             case "read":
-                                Console.WriteLine("========================================");
+                                //Console.WriteLine("========================================");
                                 for (int i = 0; i < AllServers.Count; i++)
                                 {
                                     ThreadWithState tws = new ThreadWithState(c, i);
@@ -188,12 +190,30 @@ namespace Projeto_DAD
                                 }
                                 STATE_EXECUTE = STATE_WAIT_FOR_REPLY_READ;
                                 break;
+                            case "add":
+                                Console.WriteLine("========================================");
+                                for (int i = 0; i < AllServers.Count; i++)
+                                {
+                                    ThreadWithState tws = new ThreadWithState(c, i);
+                                    Thread td = new Thread(new ThreadStart(tws.TX_Command_thread));
+
+                                    ThreadsInAction.Add(new SenderPool(tws, td, new Uri(AllServers[i]), c));
+                                    td.Start();
+                                }
+                                STATE_EXECUTE = STATE_WAIT_FOR_REPLY_ADD;
+                                break;
+                                
                         }
                         break;
                     case STATE_WAIT_FOR_REPLY_READ:
                         Pending_SignalEvent.WaitOne();
                         Pending_SignalEvent.Reset();
                         STATE_EXECUTE = STATE_COMMAND;               
+                        return;
+                    case STATE_WAIT_FOR_REPLY_ADD:
+                        Pending_SignalEvent.WaitOne();
+                        Pending_SignalEvent.Reset();
+                        STATE_EXECUTE = STATE_COMMAND;
                         return;
                 }
 
@@ -340,14 +360,14 @@ namespace Projeto_DAD
                        
                         switch (results[0])
                         {
-                            /*case "add":
+                            case "add":
                                 Execute("add", tuple);
                                 if (START_CICLE == true)
                                 {
-                                    CommandsInCycle.Add(new Command("add", tuple, null));
+                                    CommandsInCycle.Add(new Command("add", tuple, null, -1));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
-                                break;*/
+                                break;
                             case "read":
                                 Execute("read",tuple);
                                 if (START_CICLE == true)

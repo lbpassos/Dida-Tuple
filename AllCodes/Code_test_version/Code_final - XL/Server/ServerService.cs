@@ -64,11 +64,12 @@ namespace Projeto_DAD
                             tmp = ts.Read(payload);
                             MyTuple a = tmp as MyTuple;
 
-                            if (CommandsAlreadyReceived.Contains(cmd) == false) //command first time received.
+                            if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
                             {
-                                for(int i=0; i< CommandsAlreadyReceived.Count; ++i)
+                                //First time received
+                                for (int i=0; i< CommandsAlreadyReceived.Count; ++i)
                                 {
-                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true)
+                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true) //Remove the last command sent by the client
                                     {
                                         CommandsAlreadyReceived.RemoveAt(i);
                                         break;
@@ -88,6 +89,75 @@ namespace Projeto_DAD
                                 }
                             }
                             //Ignore command
+                            break;
+                        case "add":
+
+                            Console.WriteLine("============ADD: " + cmd.GetUriFromSender());
+
+                            ////
+                            if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
+                            {
+                                //First time received
+                                for (int i = 0; i < CommandsAlreadyReceived.Count; ++i)
+                                {
+                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true) //Remove the last command sent by the client
+                                    {
+                                        CommandsAlreadyReceived.RemoveAt(i);
+                                        break;
+                                    }
+                                }
+                                CommandsAlreadyReceived.Add(cmd); //add
+
+                                ts.Add(payload); //Insert in the tuple space
+
+                                Console.WriteLine("Imagem: ");
+                                Console.WriteLine(ts.ToString());
+
+
+                                GiveBackResult(cmd.GetUriFromSender(), new Command("add", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+
+                                MyTuple a1;
+                                //serach in the backlog
+                                for (int i = 0; i < commLayer.GetBackLogSize(); ++i)
+                                {
+                                    Command Command_tmp = commLayer.GetBackLogCommand(i);
+                                    if (Command_tmp.GetCommand().Equals("read"))
+                                    {
+                                        tmp = ts.Read((MyTuple)Command_tmp.GetPayload());
+                                        a1 = tmp as MyTuple;
+                                        if (a1 != null)
+                                        {
+                                            commLayer.RemoveFromBackLog(i);
+                                            i = -1;
+                                            Console.WriteLine("(ServerService) Comando Atendido e Removido do Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                                            //GiveBackResult(Command_tmp.GetUriFromSender(), a1);
+                                            GiveBackResult(cmd.GetUriFromSender(), new Command("read", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+                                        }
+                                    }
+                                    /*else
+                                    {
+                                        if (Command_tmp.GetCommand().Equals("take"))
+                                        {
+                                            tmp = ts.Take((MyTuple)Command_tmp.GetPayload());
+                                            a1 = tmp as MyTuple;
+                                            if (a1 != null) //test if is a MyTuple
+                                            {
+                                                commLayer.RemoveFromBackLog(i);
+                                                i = -1;
+                                                GiveBackResult(Command_tmp.GetUriFromSender(), a1);
+                                            }
+
+                                        }
+                                    }*/
+                                }
+                            }
+                            ///
+
+
+
+
+
+                            
                             break;
                         
                         
