@@ -70,6 +70,7 @@ namespace Projeto_DAD
                     MyTuple payload = (MyTuple)cmd.GetPayload();
                     Object tmp;
 
+                    Console.WriteLine("SERVER ======================== " + cmd.GetCommand() + " ----- " + cmd.GetPrevCommand() + "---------------" + cmd.GetUriFromSender() );
                     switch (cmd.GetCommand())
                     {
                         case "read":
@@ -91,15 +92,17 @@ namespace Projeto_DAD
                                 }
                                 CommandsAlreadyReceived.Add(cmd); //add
 
-                                if (a == null) //object does not exist in the tuple space so we put in backlog
+                                 if (a == null) //object does not exist in the tuple space so we refuse 
                                 {
-                                    commLayer.InsertInBackLog(cmd);
-                                    Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                                    GiveBackResult(cmd.GetUriFromSender(), new Command("refuse", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+                                    CommandsAlreadyReceived.Remove(cmd);
+                                    //commLayer.InsertInBackLog(cmd);
+                                    //Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
                                 }
                                 else
                                 {
-                                    
-                                    GiveBackResult(cmd.GetUriFromSender(), new Command("read", a, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()) );
+                                    //Ok
+                                    GiveBackResult(cmd.GetUriFromSender(), new Command("ack", a, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()) );
                                 }
                             }
                             //Ignore command
@@ -128,27 +131,8 @@ namespace Projeto_DAD
                                 Console.WriteLine(ts.ToString());
 
 
-                                GiveBackResult(cmd.GetUriFromSender(), new Command("add", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+                                GiveBackResult(cmd.GetUriFromSender(), new Command("ack", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
 
-                                MyTuple a1;
-                                //serach in the backlog
-                                for (int i = 0; i < commLayer.GetBackLogSize(); ++i)
-                                {
-                                    Command Command_tmp = commLayer.GetBackLogCommand(i);
-                                    if (Command_tmp.GetCommand().Equals("read"))
-                                    {
-                                        tmp = ts.Read((MyTuple)Command_tmp.GetPayload());
-                                        a1 = tmp as MyTuple;
-                                        if (a1 != null)
-                                        {
-                                            commLayer.RemoveFromBackLog(i);
-                                            i = -1;
-                                            Console.WriteLine("(ServerService) Comando Atendido e Removido do Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
-                                            //GiveBackResult(Command_tmp.GetUriFromSender(), a1);
-                                            GiveBackResult(cmd.GetUriFromSender(), new Command("read", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
-                                        }
-                                    }
-                                }
                             }
                             ///                            
                             break;
@@ -174,7 +158,8 @@ namespace Projeto_DAD
                                                                 
                                 if (res == false) //object does not exist in the tuple space so we must Send REFUSE
                                 {
-                                    GiveBackResult(cmd.GetUriFromSender(), new Command("refuse", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+                                    GiveBackResult(cmd.GetUriFromSender(), new Command("refuse", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+                                    CommandsAlreadyReceived.Remove(cmd);//Remove because we refuse at the moment
                                     //Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
                                 }
                                 else
@@ -206,7 +191,7 @@ namespace Projeto_DAD
                                         }
                                         LockedTuples.Add(LockTmp);
                                         //Return to the caller the set of all tuples that match
-                                        GiveBackResult(cmd.GetUriFromSender(), new Command("accept", LockTmp.GetSet(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+                                        GiveBackResult(cmd.GetUriFromSender(), new Command("ack", LockTmp.GetSet(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
 
                                     }
                                     else
@@ -216,7 +201,7 @@ namespace Projeto_DAD
                                             if (LockedTuples[i].IsIn(payload) == true)
                                             {
                                                 //Object already has lock. So I must send Refuse
-                                                GiveBackResult(cmd.GetUriFromSender(), new Command("refuse", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+                                                GiveBackResult(cmd.GetUriFromSender(), new Command("refuse", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
                                                 break;
                                             }
                                             else
@@ -244,7 +229,7 @@ namespace Projeto_DAD
                                                 }
                                                 LockedTuples.Add(LockTmp);
                                                 //Return to the caller the set of all tuples that match
-                                                GiveBackResult(cmd.GetUriFromSender(), new Command("accept", LockTmp.GetSet(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+                                                GiveBackResult(cmd.GetUriFromSender(), new Command("ack", LockTmp.GetSet(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
                                             }
                                         }
                                     }
@@ -279,7 +264,7 @@ namespace Projeto_DAD
                                 Console.WriteLine(ts.ToString());
 
                                 LockedTuples.Remove(new Lock(cmd.GetUriFromSender()));
-                                GiveBackResult(cmd.GetUriFromSender(), new Command("ack", cmd.GetPayload(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+                                GiveBackResult(cmd.GetUriFromSender(), new Command("ack", cmd.GetPayload(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
                             }
                             break;
                         case "free_lock":

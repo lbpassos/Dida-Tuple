@@ -55,7 +55,7 @@ namespace Projeto_DAD
             {
                 return false;
             }
-            if( (destination.Equals(a.GetCommand().GetUriFromSender())==true) && (c.GetCommand().Equals(a.GetCommand().GetCommand())==true) )
+            if( (destination.Equals(a.GetCommand().GetUriFromSender())==true) && (c.GetCommand().Equals(a.GetCommand().GetPrevCommand())==true) )
             {
                 return true;
             }

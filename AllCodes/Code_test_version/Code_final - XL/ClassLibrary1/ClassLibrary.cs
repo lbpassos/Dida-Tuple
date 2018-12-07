@@ -407,14 +407,17 @@ namespace Projeto_DAD
     [Serializable]
     public class Command
     {
-        private string cmd;
+        private string cmd; //Comando actual
+        private string prev_cmd; //Comando previo. Em caso de pergunta é NULL. Em caso de resposta é o comando iniciador
+
         private object payload;
         private Uri uri;
         private int Sequence;
 
-        public Command(string command, object tuple, Uri add, int seq)
+        public Command(string command, object tuple, Uri add, int seq, string pc)
         {
             cmd = command;
+            prev_cmd = pc;
             payload = tuple;
             uri = add;
             Sequence = seq;
@@ -423,6 +426,11 @@ namespace Projeto_DAD
         public string GetCommand()
         {
             return cmd;
+        }
+
+        public string GetPrevCommand()
+        {
+            return prev_cmd;
         }
 
         public object GetPayload()
