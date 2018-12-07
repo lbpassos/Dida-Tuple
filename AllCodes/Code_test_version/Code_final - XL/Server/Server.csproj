@@ -47,6 +47,7 @@
     <Compile Include="CommandReplicas.cs" />
     <Compile Include="CommunicationLayerReplica.cs" />
     <Compile Include="CommunicationLayer.cs" />
+    <Compile Include="Lock.cs" />
     <Compile Include="Timeout.cs" />
     <Compile Include="TupleSpace.cs" />
     <Compile Include="Server.cs" />

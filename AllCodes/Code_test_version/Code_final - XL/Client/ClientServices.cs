@@ -14,6 +14,11 @@ namespace Projeto_DAD
         
 
         private static int NumOfAddReceived = 0; //Number of Add received
+        private static int NumOfRefusedReceived = 0;
+        private static int NumOfAcceptedReceived = 0;
+        private static int NumOfAckReceived = 0;
+        private static List<Command> AcceptedReply = new List<Command>(); //All acepted messages
+
         private static int TotalNum;
 
         private static CommunicationLayer commLayer = new CommunicationLayer();
@@ -39,7 +44,7 @@ namespace Projeto_DAD
                 if (commLayer.GetQueueSize() > 0) //if there is commands
                 {
                     Command mt = commLayer.RemoveFromCommandQueue();
-                    MyTuple payload = (MyTuple)mt.GetPayload();
+                    //MyTuple payload = (MyTuple)mt.GetPayload();
                     Object tmp;
 
                     switch (mt.GetCommand())
@@ -105,13 +110,76 @@ namespace Projeto_DAD
                                     AlreadyEvolvedFromAdd = true;
                                     ClientProgram.Pending_SignalEvent.Set(); //Signal UpperLayer that it can evolve
                                     Console.WriteLine("(ClientServices) ADD Success in the majority of replicas: ");
-                                    flag = true;
+                                    flag = false;
 
                                     //Majority of ADD Acknowledge received
                                 }
                             }
                             break;
+                        case "refuse":
+                            ++NumOfRefusedReceived;
+                            if( (NumOfRefusedReceived+NumOfAcceptedReceived) == ClientProgram.AllServers.Count)
+                            {
+                                //At least One refused. Start al over again
+                                NumOfRefusedReceived = 0;
+                                NumOfAcceptedReceived = 0;
+                                ClientProgram.Pending_SignalEvent.Set();
+                            }
+                            break;
+                        case "accept":
+                            ++NumOfAcceptedReceived;
+                            AcceptedReply.Add(mt);
+                            if ( NumOfAcceptedReceived== ClientProgram.AllServers.Count)
+                            {
+                                //All accpeted
+                                
+                                HashSet<MyTuple> Intersection = (HashSet<MyTuple>)AcceptedReply[0].GetPayload();
+                                for (int i=1; i< AcceptedReply.Count; ++i)
+                                {
 
+                                    HashSet<MyTuple> mySet2 = (HashSet<MyTuple>)AcceptedReply[i].GetPayload();
+                                    Intersection.Intersect(mySet2);
+                                }
+
+                                //Test if null
+                                if (Intersection.Count == 0)
+                                {
+                                    //Restart FAse 1
+                                    ClientProgram.Pending_SignalEvent.Set();
+                                }
+                                else
+                                {
+                                    foreach (MyTuple i in Intersection)
+                                    {
+                                        //Console.WriteLine("(ClientServices) TAKE Success: " + i.ToString());
+                                        ClientProgram.FinnishTake();
+                                        ClientProgram.Pending_SignalEvent.Set();
+
+                                        
+
+                                        //Console.WriteLine("Antes do Remove");
+                                        
+
+                                        
+
+                                        //Console.WriteLine("Depois do Remove");
+                                        break;
+                                    }
+                                }                               
+                            }
+                            break;
+                        case "ack": //FASE 2
+                            ++NumOfAckReceived;
+                            if(NumOfAckReceived == ClientProgram.AllServers.Count)
+                            {
+                                //All received. Finnish
+                                NumOfAckReceived = 0;
+                                Console.WriteLine("(ClientServices) TAKE Success in all");
+                                ClientProgram.FinnishTake();
+                                
+                            }
+                            ClientProgram.Pending_SignalEvent.Set();
+                            break;
                     }
                 }
             }

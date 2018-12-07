@@ -64,7 +64,13 @@ namespace Projeto_DAD
                     //Keep
                 }
                 //Thread.Sleep(60000);//2 seconds
+                if (c.GetCommand().Equals("take") || c.GetCommand().Equals("remove"))
+                {
+                    //If the command is Take. Send only one
+                    FlagStop = true;
+                }
             }
+            
             Console.WriteLine("Terminei de mandar para: " + ClientProgram.AllServers[serverPos]);
         }
 
@@ -84,10 +90,13 @@ namespace Projeto_DAD
         private ClientServices cs;
 
         private int ServerToConnect; //Server to connect
-        private int SequenceNumber = 0; //Sequence number of the commands
+        public static int SequenceNumber = 0; //Sequence number of the commands
         public static List<SenderPool> ThreadsInAction;
 
         public static ManualResetEvent Pending_SignalEvent = new ManualResetEvent(false); //Pending thread can start
+        public static ManualResetEvent Take_SignalEvent = new ManualResetEvent(false); //Pending thread can start
+
+        private static bool TerminateTakenActivity = false;
 
         public static List<string> AllServers;    //All servers present in the pool
         private const string path = "..\\..\\..\\Filedatabase\\database.txt"; //database of all servers
@@ -105,8 +114,9 @@ namespace Projeto_DAD
         private const int STATE_COMMAND = 0;
         private const int STATE_WAIT_FOR_REPLY_READ = 1;
         private const int STATE_WAIT_FOR_REPLY_ADD = 2;
+        private const int STATE_WAIT_FOR_REPLY_TAKE = 3;
 
-        private int STATE_EXECUTE = STATE_COMMAND;
+        private static int STATE_EXECUTE = STATE_COMMAND;
         private int TIMEOUT_FOR_READ = 5000; //5 s
 
         private bool START_CICLE = false;
@@ -116,8 +126,8 @@ namespace Projeto_DAD
         private string[] results;
         private MyTuple tuple = null;
 
-        private Uri MyAddress;
-        private static bool BlockUntilAnswer = false;
+        public static Uri MyAddress;
+
 
         private string clientScript_path;
         private List<string> script_comands = new List<string>();
@@ -153,19 +163,22 @@ namespace Projeto_DAD
         }
 
 
-        public static void AnswerIsReceived()
-        {
-            BlockUntilAnswer = true;
-        }
-
         
+
+        public static void FinnishTake()
+        {
+            if(STATE_EXECUTE==STATE_WAIT_FOR_REPLY_TAKE)
+            {
+                TerminateTakenActivity = true;
+            }
+        }
         
         /// <summary>
         /// Execute the command. Sends to Server
         /// </summary>
         /// <param name="command"></param>
         /// <param name="t"></param>
-        private void Execute(string command, MyTuple t)
+        public static void Execute(string command, MyTuple t)
         {
             Console.WriteLine("EXECUTAR");
             Command c = new Command(command, t, MyAddress, ++SequenceNumber);
@@ -202,7 +215,31 @@ namespace Projeto_DAD
                                 }
                                 STATE_EXECUTE = STATE_WAIT_FOR_REPLY_ADD;
                                 break;
-                                
+                            case "take":  //FASE 1
+                                Console.WriteLine("========================================");
+                                for (int i = 0; i < AllServers.Count; i++)
+                                {
+                                    ThreadWithState tws = new ThreadWithState(c, i);
+                                    Thread td = new Thread(new ThreadStart(tws.TX_Command_thread));
+
+                                    ThreadsInAction.Add(new SenderPool(tws, td, new Uri(AllServers[i]), c));
+                                    td.Start();
+                                }
+                                STATE_EXECUTE = STATE_WAIT_FOR_REPLY_TAKE;
+                                break;
+                            case "remove":  //FASE 2
+                                Console.WriteLine("========================================");
+                                for (int i = 0; i < AllServers.Count; i++)
+                                {
+                                    ThreadWithState tws = new ThreadWithState(c, i);
+                                    Thread td = new Thread(new ThreadStart(tws.TX_Command_thread));
+
+                                    ThreadsInAction.Add(new SenderPool(tws, td, new Uri(AllServers[i]), c));
+                                    td.Start();
+                                }
+                                STATE_EXECUTE = STATE_WAIT_FOR_REPLY_TAKE;
+                                break;
+
                         }
                         break;
                     case STATE_WAIT_FOR_REPLY_READ:
@@ -215,6 +252,34 @@ namespace Projeto_DAD
                         Pending_SignalEvent.Reset();
                         STATE_EXECUTE = STATE_COMMAND;
                         return;
+                    case STATE_WAIT_FOR_REPLY_TAKE:
+                        Console.WriteLine("============INICIO======================STATE_WAIT_FOR_REPLY_TAKE");
+
+                        Pending_SignalEvent.WaitOne();
+                        Pending_SignalEvent.Reset();
+
+                        Console.WriteLine("============ENTREI======================STATE_WAIT_FOR_REPLY_TAKE: " + TerminateTakenActivity.ToString());
+                        STATE_EXECUTE = STATE_COMMAND;
+                        if (TerminateTakenActivity==true && command=="take")
+                        {
+                            //Console.WriteLine("============ACABEI======================STATE_WAIT_FOR_REPLY_TAKE");
+                            TerminateTakenActivity = false;
+                            command = "remove";
+                            c = new Command(command, t, MyAddress, ++SequenceNumber);
+                            //Take_SignalEvent.Set();
+                            //return;
+                        }
+                        else
+                        {
+                            if ( TerminateTakenActivity == true && command == "remove")
+                            {
+                                TerminateTakenActivity = false;
+                                return;
+                            }
+                        }
+                        break;
+                   
+
                 }
 
 
@@ -376,11 +441,11 @@ namespace Projeto_DAD
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                                 break;
-                            /*case "take":
+                            case "take":
                                 Execute("take",tuple);
                                 if (START_CICLE == true)
                                 {
-                                    CommandsInCycle.Add(new Command("take", tuple, null));
+                                    CommandsInCycle.Add(new Command("take", tuple, null, -1));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                                 break;
@@ -388,7 +453,7 @@ namespace Projeto_DAD
                                 Thread.Sleep(Int32.Parse(results[1]));
                                 if (START_CICLE == true)
                                 {
-                                    CommandsInCycle.Add(new Command("wait", results[1], null));
+                                    CommandsInCycle.Add(new Command("wait", results[1], null, -1));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                                 break;
@@ -401,7 +466,7 @@ namespace Projeto_DAD
                                 START_CICLE = false;
                                 --NumberOfCycles;
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_CYCLE;
-                                break;*/
+                                break;
                             default:
                                 Console.WriteLine("Wrong type of command!");
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
