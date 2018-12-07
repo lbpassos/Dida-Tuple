@@ -47,7 +47,10 @@
     <Compile Include="ClientProgram.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="ClientServices.cs" />
+    <Compile Include="CommunicationLayer.cs" />
+    <Compile Include="Lock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SenderPool.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

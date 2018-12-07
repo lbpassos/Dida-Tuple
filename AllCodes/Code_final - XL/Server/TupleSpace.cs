@@ -59,6 +59,27 @@ namespace Projeto_DAD
             return null;
         }
 
+        public bool IsTupleIn(MyTuple mt)//Check if tuple is in TSS
+        {
+            for (int i = 0; i < mySpace.Count; ++i)
+            {
+                if (mySpace[i].Equals(mt)) //Finds the first one. Returns
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public MyTuple RoverOneByOne(int pos) //Get Each tuple in the tupplespace
+        {
+            if (pos >= mySpace.Count)
+            {
+                return null;
+            }
+            return mySpace[pos];
+        }
+
         //Get Current Image
         public List<MyTuple> GetImage()
         {

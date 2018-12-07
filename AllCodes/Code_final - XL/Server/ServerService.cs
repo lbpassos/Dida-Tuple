@@ -11,14 +11,19 @@ namespace Projeto_DAD
     {
 
         public static TupleSpace ts = new TupleSpace();
-       // private static CommunicationLayer commLayer = new CommunicationLayer();
+        private static CommunicationLayer commLayer = new CommunicationLayer();
+        private static List<Command> CommandsAlreadyReceived = new List<Command>();
+        private static List<Lock> LockedTuples = new List<Lock>(); //Locks in the Tuplespace
+
         private static bool MustFreeze = false;
         //private static bool Root = false;
         private static int DelayMessagesTime;
 
 
+
         /* XL */
-        public static CommunicationLayerReplica CommLayer_forReplica = new CommunicationLayerReplica(); //Replica channel
+        //public static CommunicationLayerReplica CommLayer_forReplica = new CommunicationLayerReplica(); //Replica channel
+
 
         public void Ping()
         {
@@ -36,9 +41,22 @@ namespace Projeto_DAD
                 return;
             }
             Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
-            CommLayer_forReplica.InsertCommand(a);
+            //CommLayer_forReplica.InsertCommand(a);
 
         }
+
+
+        //==============================================================
+        //==============================================================
+        public List<EachServer> ViewDetector()
+        {
+            //Vai supervisionar as Views
+
+            return Server.AllServers;
+        }
+        //==============================================================
+        //==============================================================
+
 
         public static void CheckCommandsInQueue_thread()
         {
@@ -46,59 +64,229 @@ namespace Projeto_DAD
             {
                 while (MustFreeze == true) ; //FREEZE ****************************
                 Thread.Sleep(50);//Min time to check commands
-                if (CommLayer_forReplica.GetQueueSize() > 0) //if there is commands
+                if (commLayer.GetQueueSize() > 0) //if there is commands
                 {
-                    CommandReplicas cmd = CommLayer_forReplica.RemoveFromCommandQueue();
-                    //MyTuple payload = (MyTuple)cmd.GetPayload();
-                    //Object tmp;
+                    Command cmd = commLayer.RemoveFromCommandQueue();
+                    MyTuple payload = (MyTuple)cmd.GetPayload();
+                    Object tmp;
 
+                    Console.WriteLine("SERVER ======================== " + cmd.GetCommand() + " ----- " + cmd.GetPrevCommand() + "---------------" + cmd.GetUriFromSender() );
                     switch (cmd.GetCommand())
                     {
-                        case "REGISTER":
+                        case "read":
                             Console.WriteLine("START ========= REGISTER");
-                            if (ServerProgram.AmIRoot() == true)
+
+                            tmp = ts.Read(payload);
+                            MyTuple a = tmp as MyTuple;
+
+                            if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
                             {
-                                View tmp = ServerProgram.GetCurrentViewID();
-                                tmp.AddNodeInView(cmd.GetID()); //Add node to the current view
-                                ServerProgram.SetCurrentViewID(tmp); //View update
+                                //First time received
+                                for (int i=0; i< CommandsAlreadyReceived.Count; ++i)
+                                {
+                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true) //Remove the last command sent by the client
+                                    {
+                                        CommandsAlreadyReceived.RemoveAt(i);
+                                        break;
+                                    }
+                                }
+                                CommandsAlreadyReceived.Add(cmd); //add
 
-                                Console.WriteLine("============ REGISTER ===========", tmp);
+                                 if (a == null) //object does not exist in the tuple space so we refuse 
+                                {
+                                    GiveBackResult(cmd.GetUriFromSender(), new Command("refuse", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+                                    CommandsAlreadyReceived.Remove(cmd);
+                                    //commLayer.InsertInBackLog(cmd);
+                                    //Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                                }
+                                else
+                                {
+                                    //Ok
+                                    GiveBackResult(cmd.GetUriFromSender(), new Command("ack", a, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()) );
+                                }
+                            }
+                            //Ignore command
+                            break;
+                        case "add":
 
-                                GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("REGISTER_ACK", ServerProgram.GetCurrentViewID(), ts, ServerProgram.GetMyAddress(), ServerProgram.GetMyId()));
-                                ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_INFORM_VIEW_CHANGE);
+                            Console.WriteLine("============ADD: " + cmd.GetUriFromSender());
+
+                            ////
+                            if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
+                            {
+                                //First time received
+                                for (int i = 0; i < CommandsAlreadyReceived.Count; ++i)
+                                {
+                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true) //Remove the last command sent by the client
+                                    {
+                                        CommandsAlreadyReceived.RemoveAt(i);
+                                        break;
+                                    }
+                                }
+                                CommandsAlreadyReceived.Add(cmd); //add
+
+                                ts.Add(payload); //Insert in the tuple space
+
+                                Console.WriteLine("Imagem: ");
+                                Console.WriteLine(ts.ToString());
+
+
+                                GiveBackResult(cmd.GetUriFromSender(), new Command("ack", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+
+                            }
+                            ///                            
+                            break;
+                        case "take":
+                            if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
+                            {
+                                //First time received
+                                for (int i = 0; i < CommandsAlreadyReceived.Count; ++i)
+                                {
+                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true) //Remove the last command sent by the client
+                                    {
+                                        CommandsAlreadyReceived.RemoveAt(i);
+                                        break;
+                                    }
+                                }
+                                CommandsAlreadyReceived.Add(cmd); //add
+
+
+                                //========================================================
+                                //============================= PHASE 1
+                                //========================================================
+                                bool res = ts.IsTupleIn(payload);
+                                                                
+                                if (res == false) //object does not exist in the tuple space so we must Send REFUSE
+                                {
+                                    GiveBackResult(cmd.GetUriFromSender(), new Command("refuse", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+                                    CommandsAlreadyReceived.Remove(cmd);//Remove because we refuse at the moment
+                                    //Console.WriteLine("(ServerService) Comando no Backlog: " + cmd.GetCommand() + " " + cmd.GetPayload().ToString());
+                                }
+                                else
+                                {
+                                    //Check if is in lock
+                                    if (LockedTuples.Count == 0)
+                                    {
+                                        //I will acquire the lock for sure
+                                        //Acquire Lock
+                                        Lock LockTmp = new Lock(cmd.GetUriFromSender());
+
+                                        MyTuple RoverTmp;
+                                        int Rover = 0;
+                                        while (true) //Check all that match
+                                        {
+                                            RoverTmp = ts.RoverOneByOne(Rover);
+                                            if (RoverTmp == null)
+                                            {
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                if (RoverTmp.Equals(payload) == true)
+                                                {
+                                                    LockTmp.Insert(RoverTmp);
+                                                }
+                                            }
+                                            ++Rover;
+                                        }
+                                        LockedTuples.Add(LockTmp);
+                                        //Return to the caller the set of all tuples that match
+                                        GiveBackResult(cmd.GetUriFromSender(), new Command("ack", LockTmp.GetSet(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < LockedTuples.Count; ++i)
+                                        {
+                                            if (LockedTuples[i].IsIn(payload) == true)
+                                            {
+                                                //Object already has lock. So I must send Refuse
+                                                GiveBackResult(cmd.GetUriFromSender(), new Command("refuse", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                //Acquire Lock
+                                                Lock LockTmp = new Lock(cmd.GetUriFromSender());
+
+                                                MyTuple RoverTmp;
+                                                int Rover = 0;
+                                                while (true) //Check all that match
+                                                {
+                                                    RoverTmp = ts.RoverOneByOne(Rover);
+                                                    if (RoverTmp == null)
+                                                    {
+                                                        break;
+                                                    }
+                                                    else
+                                                    {
+                                                        if (RoverTmp.Equals(payload) == true)
+                                                        {
+                                                            LockTmp.Insert(RoverTmp);
+                                                        }
+                                                    }
+                                                    ++Rover;
+                                                }
+                                                LockedTuples.Add(LockTmp);
+                                                //Return to the caller the set of all tuples that match
+                                                GiveBackResult(cmd.GetUriFromSender(), new Command("ack", LockTmp.GetSet(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+                                            }
+                                        }
+                                    }
+                                }
+                               
+
+                                
+
+                                //Console.WriteLine("Imagem: ");
+                                //Console.WriteLine(ts.ToString());
                             }
                             break;
-                        case "REGISTER_ACK":
+                        case "remove":
+                            //========================================================
+                            //============================= PHASE 2
+                            //========================================================
+                            if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
+                            {
+                                //First time received
+                                for (int i = 0; i < CommandsAlreadyReceived.Count; ++i)
+                                {
+                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true) //Remove the last command sent by the client
+                                    {
+                                        CommandsAlreadyReceived.RemoveAt(i);
+                                        break;
+                                    }
+                                }
+                                CommandsAlreadyReceived.Add(cmd); //add
+                                ts.Take((MyTuple)cmd.GetPayload());
+                                //release do lock
+                                Console.WriteLine("Imagem: ");
+                                Console.WriteLine(ts.ToString());
 
-                            Console.WriteLine("Antes ----- REGISTER_ACK");
-
-                            //if ( ServerProgram.GetStateMachine()==ServerProgram.STATE_MACHINE_NETWORK_WAIT_FOR_ANSWER_INIT )
-                            ServerProgram.Pending_SignalEvent.WaitOne();
-                            ServerProgram.Pending_SignalEvent.Reset();
-                            //{
-                                Console.WriteLine("No If ----- REGISTER_ACK + ID_DO_ROOT: " + cmd.GetID());
-
-                                ServerProgram.SetCurrentViewID(cmd.GetProposedView()); //View update
-                                ts = cmd.GetTSS();
-                                ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_CHECK_ROOT);
-                                ServerProgram.DefineRootId(cmd.GetID());
-                            ServerProgram.CommandAvailable_SignalEvent.Set();
-                            //}
+                                LockedTuples.Remove(new Lock(cmd.GetUriFromSender()));
+                                GiveBackResult(cmd.GetUriFromSender(), new Command("ack", cmd.GetPayload(), ServerProgram.GetMyAddress(), cmd.GetSequenceNumber(), cmd.GetCommand()));
+                            }
                             break;
-                        case "CHECK_ROOT":
+                        case "free_lock":
+                            if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
+                            {
+                                //First time received
+                                for (int i = 0; i < CommandsAlreadyReceived.Count; ++i)
+                                {
+                                    if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true) //Remove the last command sent by the client
+                                    {
+                                        CommandsAlreadyReceived.RemoveAt(i);
+                                        break;
+                                    }
+                                }
+                                CommandsAlreadyReceived.Add(cmd); //add
+
+                                //release do lock
+                                LockedTuples.Remove(new Lock(cmd.GetUriFromSender()));
+                                //GiveBackResult(cmd.GetUriFromSender(), new Command("ack", null, ServerProgram.GetMyAddress(), cmd.GetSequenceNumber()));
+                            }
                             break;
-                        case "CHECK":
-                            break;
-                        case "VIEW_CHANGE":
-                            ServerProgram.SetCurrentViewID( cmd.GetProposedView() ); //View update
-                            break;
-                        
-
-
-
-
-
-                        
+  
                     }
                 }
             }
@@ -165,7 +353,7 @@ namespace Projeto_DAD
 
             while (MustFreeze == true) ; //Freeze
             Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
-            CommLayer_forReplica.InsertCommand(a);
+            //CommLayer_forReplica.InsertCommand(a);
 
             /*if (mt != null)
             {
@@ -193,7 +381,24 @@ namespace Projeto_DAD
 
         /* END XL */
 
-        public void RX_Command(Command cmd) { } //Receive Commands do cliente
+        public bool RX_Command(Command cmd)//Receive Commands do cliente
+        {
+            Thread.Sleep(DelayMessagesTime);//Delay Insertion of messages
+
+            commLayer.InsertCommand(cmd);
+            
+            return true;
+        }
+        private static void GiveBackResult(Uri uri, Command mt)
+        {
+           
+            IClientServices obj = (IClientServices)Activator.GetObject(typeof(IClientServices), uri.AbsoluteUri + "MyRemoteClient");
+            obj.sink(mt);
+        }
+
+
+
+
         public Object[] getImage() { return null; } //Request on Init
         public void TakeCommand(Command cmd) { }//Get Commands from ROOT
 

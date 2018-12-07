@@ -65,6 +65,7 @@ namespace Projeto_DAD
 
             new Thread(() => ClientCallbck_thread()).Start();
             new Thread(() => Client_thread(uri, path)).Start();
+            new Thread(() => ClientServices.ProcessReceivedReplys_thread()).Start();
 
 
         }

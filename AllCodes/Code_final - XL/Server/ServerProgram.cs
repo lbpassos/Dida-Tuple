@@ -103,6 +103,12 @@ namespace Projeto_DAD
         }
 
 
+
+
+
+
+
+
         //=========================================================================================
         //                                      MAIN
         //=========================================================================================
@@ -174,28 +180,28 @@ namespace Projeto_DAD
                     //Start searching for the Root
 
                     Console.WriteLine("================ STATE_MACHINE_NETWORK_START =============");
+                    Thread.Sleep(60000);
 
-                    serversAlive.Clear();
+                    /*serversAlive.Clear();
 
-                    if (MyID == 1)
+                    for (int i = 0; i < Server.AllServers.Count; i++)
                     {
-                        if (flag == false)
+                        Thread.Sleep(50);
+                        if (Server.AllServers[i].ID == MyID) //Avoid ping himself
                         {
-                            RootIs = MyID;
-                            STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_IM_ROOT;
+                            continue;
                         }
-                    }
-                    else
-                    {
                         try
                         {
-                            ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[0].UID.AbsoluteUri + "MyRemoteObjectName");
-                            Console.WriteLine("CHECK: {0}", Server.AllServers[0].UID.AbsoluteUri);
+                            ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
+                            Console.WriteLine("CHECK: {0}", Server.AllServers[i].UID.AbsoluteUri);
 
                             if (obj.IsRoot() == true)
                             {
-                                RootIs = Server.AllServers[0].ID; //ID of the current root node
+                                RootIs = Server.AllServers[i].ID; //ID of the current root node
 
+                                
+                                
                                 obj.RX_ReplicaCommand(new CommandReplicas("REGISTER", null, null, MyAddress, MyID));
                                 STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_WAIT_FOR_ANSWER_INIT;
                                 Pending_SignalEvent.Set();
@@ -211,106 +217,57 @@ namespace Projeto_DAD
 
 
                                 STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_CHECK_ROOT;
-
+                                
                                 flag = true;
+                                
 
-                                Console.WriteLine("ROOT is {0}", Server.AllServers[0].UID.AbsoluteUri);
+                                
+                               
+                                //Console.WriteLine("ROOT is {0}", Server.AllServers[i].UID.AbsoluteUri);
 
-
+                               
                                 break;
+                            }
+                            else
+                            {
+                                serversAlive.Add(i); //Server ID
+                                //Console.WriteLine("ALIVE: {0}", Server.AllServers[i].UID.AbsoluteUri);
 
                             }
                         }
-                        catch
+                        catch (Exception e)
                         {
-                            Console.WriteLine("The ROOT Server {0} is DEAD", Server.AllServers[0].UID.AbsoluteUri);
-                            Thread.Sleep(50);
+                            //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: EXCEPTION");
+                            Console.WriteLine("DEAD: {0}", Server.AllServers[i].UID.AbsoluteUri);
+                            //Console.WriteLine(e);
                         }
                     }
-                        //for (int i = 0; i < Server.AllServers.Count; i++)
-                        //{
-                        //    Thread.Sleep(50);
-                        //    if (Server.AllServers[i].ID == MyID) //Avoid ping himself
-                        //    {
-                        //        continue;
-                        //    }
-                        //    try
-                        //    {
-                        //        ServerService obj = (ServerService)Activator.GetObject(typeof(ServerService), Server.AllServers[i].UID.AbsoluteUri + "MyRemoteObjectName");
-                        //        Console.WriteLine("CHECK: {0}", Server.AllServers[i].UID.AbsoluteUri);
+                    //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: TEST_FLAG");
+                    if (flag == false)
+                    {
 
-                        //        if (obj.IsRoot() == true)
-                        //        {
-                        //            RootIs = Server.AllServers[i].ID; //ID of the current root node
+                        //Console.WriteLine("FLAG==FALSE: {0}", serversAlive.Count);
+                        if (serversAlive.Count == 0) //check if anyone is ROOT
+                        {
+                            //ROOT
+                            RootIs = MyID; //ServerService.setRoot(true);
+                            STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_IM_ROOT;
+                        }
+                        else
+                        {
+                            //Console.WriteLine("MY_IDENTIFICATION: {0}, {1}", Server.My_Identification.ID, (int)serversAlive[0]);
+                            if ((Server.My_Identification.ID - 1) < (int)serversAlive[0])
+                            {
+                                //ROOT
+                                //ServerService.setRoot(true);
+                                RootIs = MyID;
+                                STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_IM_ROOT;
+                            }
 
+                        }
+                    }*/
 
-
-                        //            obj.RX_ReplicaCommand(new CommandReplicas("REGISTER", null, null, MyAddress, MyID));
-                        //            STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_WAIT_FOR_ANSWER_INIT;
-                        //            Pending_SignalEvent.Set();
-                        //            //object[] imageFromRoot = obj.getImage();
-                        //            //ServerService.SetTupleSpace(new TupleSpace((List<MyTuple>)imageFromRoot[0])); //Novo tuplespace criado
-                        //            //ServerService.SetCommunicationLayer((Queue)imageFromRoot[1], (List<Command>)imageFromRoot[2]);
-
-
-                        //            //ServerService.SetTupleSpace( obj.getImage() ); //get the image of the root
-                        //            //Console.WriteLine("Imagem: ");
-                        //            //Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
-
-
-
-                        //            STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_CHECK_ROOT;
-
-                        //            flag = true;
-
-
-
-
-                        //            //Console.WriteLine("ROOT is {0}", Server.AllServers[i].UID.AbsoluteUri);
-
-
-                        //            break;
-                        //        }
-                        //        else
-                        //        {
-                        //            serversAlive.Add(i); //Server ID
-                        //            //Console.WriteLine("ALIVE: {0}", Server.AllServers[i].UID.AbsoluteUri);
-
-                        //        }
-                        //    }
-                        //    catch (Exception e)
-                        //    {
-                        //        //Console.WriteLine("IN STATE_MACHINE_NETWORK_START: EXCEPTION");
-                        //        Console.WriteLine("ROOT SERVER IS DEAD: {0}", Server.AllServers[i].UID.AbsoluteUri);
-                        //        //Console.WriteLine(e);
-                        //    }
-                        //}
-                        ////Console.WriteLine("IN STATE_MACHINE_NETWORK_START: TEST_FLAG");
-                        //if (flag == false)
-                        //{
-
-                        //    //Console.WriteLine("FLAG==FALSE: {0}", serversAlive.Count);
-                        //    if (serversAlive.Count == 0) //check if anyone is ROOT
-                        //    {
-                        //        //ROOT
-                        //        RootIs = MyID; //ServerService.setRoot(true);
-                        //        STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_IM_ROOT;
-                        //    }
-                        //    else
-                        //    {
-                        //        //Console.WriteLine("MY_IDENTIFICATION: {0}, {1}", Server.My_Identification.ID, (int)serversAlive[0]);
-                        //        if ((Server.My_Identification.ID - 1) < (int)serversAlive[0])
-                        //        {
-                        //            //ROOT
-                        //            //ServerService.setRoot(true);
-                        //            RootIs = MyID;
-                        //            STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_IM_ROOT;
-                        //        }
-
-                        //    }
-                        //}
-
-                        break;
+                    break;
                 case STATE_MACHINE_NETWORK_UPDATE_ROOT:
 
                     serversAlive.Clear();

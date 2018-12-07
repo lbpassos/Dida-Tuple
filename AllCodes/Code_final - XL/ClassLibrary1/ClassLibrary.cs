@@ -9,15 +9,20 @@ namespace Projeto_DAD
     {
 
 
-        void RX_ReplicaCommand(object cmd); //Receive commands from other replicas
-        bool IsRoot();
+        void RX_ReplicaCommand(object cmd); 
+        //Receive commands from other replicas
+        //bool IsRoot();
         
+        //============================= NEW IMPLEMENTATION ===============
+        void Ping();
+        bool RX_Command(Command cmd); //Receive Commands do cliente
+        //============================= END NEW IMPLEMENTATION ===============
 
 
 
         void SinkFromReplicas(object cmd);
         
-        void RX_Command(Command cmd); //Receive Commands do cliente
+       
         Object[] getImage(); //Request on Init
         void TakeCommand(Command cmd);//Get Commands from ROOT
 
@@ -29,7 +34,7 @@ namespace Projeto_DAD
 
     public interface IClientServices
     {
-        void sink(MyTuple mt);
+        void sink(Command mt);
 
         void freeze();
         void unfreeze();
@@ -221,89 +226,89 @@ namespace Projeto_DAD
     }
 
     [Serializable]
-    public class StringEmulator
-    {
-        public string s1;
-
-
-        public StringEmulator(string ps1)
+        public class StringEmulator
         {
+            public string s1;
 
-            s1 = ps1;
 
-        }
-
-        public int GetSize()
-        {
-            return s1.Length;
-        }
-
-        public string GetString()
-        {
-            return s1;
-        }
-        public override bool Equals(object o)
-        {
-            StringEmulator a = o as StringEmulator;
-            if (a == null)
+            public StringEmulator(string ps1)
             {
-                return false;
+
+                s1 = ps1;
+
             }
-            else
+
+            public int GetSize()
             {
-                if (this.s1.Equals(a.s1) == true)
+                return s1.Length;
+            }
+
+            public string GetString()
+            {
+                return s1;
+            }
+            public override bool Equals(object o)
+            {
+                StringEmulator a = o as StringEmulator;
+                if (a == null)
                 {
-                    return true;
+                    return false;
                 }
                 else
                 {
-                    string pattern = "";
-
-                    //Console.WriteLine("DEBUG: {0}", a.GetString());
-                    if (a.GetString()[0] == '*') //In the beginning
+                    if (this.s1.Equals(a.s1) == true)
                     {
-                        if (a.GetSize() == 1) //all
+                        return true;
+                    }
+                    else
+                    {
+                        string pattern = "";
+
+                        //Console.WriteLine("DEBUG: {0}", a.GetString());
+                        if (a.GetString()[0] == '*') //In the beginning
                         {
-                            return true;
+                            if (a.GetSize() == 1) //all
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                pattern += a.GetString().Substring(1) + "$";
+                                Regex rx = new Regex(@pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                                MatchCollection matches = rx.Matches(s1);
+                                if (matches.Count > 0)
+                                {
+                                    return true;
+                                }
+
+                            }
                         }
-                        else
+                        if (a.GetString()[a.GetSize() - 1] == '*') //In the end
                         {
-                            pattern += a.GetString().Substring(1) + "$";
+                            pattern += "^" + a.GetString().Substring(0, a.GetSize() - 2);
                             Regex rx = new Regex(@pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
                             MatchCollection matches = rx.Matches(s1);
                             if (matches.Count > 0)
                             {
                                 return true;
                             }
-
                         }
-                    }
-                    if (a.GetString()[a.GetSize() - 1] == '*') //In the end
-                    {
-                        pattern += "^" + a.GetString().Substring(0, a.GetSize() - 2);
-                        Regex rx = new Regex(@pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                        MatchCollection matches = rx.Matches(s1);
-                        if (matches.Count > 0)
-                        {
-                            return true;
-                        }
-                    }
 
-                    return false;
+                        return false;
+                    }
                 }
             }
-        }
-        public override int GetHashCode()
-        {
-            return s1.GetHashCode();
-        }
+            public override int GetHashCode()
+            {
+                return s1.GetHashCode();
+            }
 
-        public override string ToString()
-        {
-            return "\"" + s1 + "\"";
-        }
+            public override string ToString()
+            {
+                return "\"" + s1 + "\"";
+            }
 
-    }
+        }
 
 
     /* ===============================================================================================================
@@ -402,15 +407,20 @@ namespace Projeto_DAD
     [Serializable]
     public class Command
     {
-        private string cmd;
+        private string cmd; //Comando actual
+        private string prev_cmd; //Comando previo. Em caso de pergunta é NULL. Em caso de resposta é o comando iniciador
+
         private object payload;
         private Uri uri;
+        private int Sequence;
 
-        public Command(string command, object tuple, Uri add)
+        public Command(string command, object tuple, Uri add, int seq, string pc)
         {
             cmd = command;
+            prev_cmd = pc;
             payload = tuple;
             uri = add;
+            Sequence = seq;
         }
 
         public string GetCommand()
@@ -418,14 +428,47 @@ namespace Projeto_DAD
             return cmd;
         }
 
+        public string GetPrevCommand()
+        {
+            return prev_cmd;
+        }
+
         public object GetPayload()
         {
             return payload;
+        }
+        public void SetPayload(object p)
+        {
+            payload = p;
         }
 
         public Uri GetUriFromSender()
         {
             return uri;
+        }
+
+        public int GetSequenceNumber()
+        {
+            return Sequence;
+        }
+
+        public override bool Equals(object obj)
+        {
+            Command a = obj as Command;
+            if (a == null)
+            {
+                return false;
+            }
+            if( cmd.Equals(a.GetCommand())==true &&  uri.Equals(a.GetUriFromSender())==true && Sequence==a.GetSequenceNumber())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return cmd.GetHashCode() + uri.GetHashCode() + Sequence.GetHashCode();
         }
     }
 

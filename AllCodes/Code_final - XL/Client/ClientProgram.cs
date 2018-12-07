@@ -10,15 +10,97 @@ using System.Text.RegularExpressions;
 using System.Runtime.Remoting;
 using System.Threading;
 using System.Diagnostics;
+using System.Runtime.Remoting.Messaging;
 
 namespace Projeto_DAD
 {
+
+    public class ThreadWithState
+    {
+        // State information used in the task.
+        private Command c;
+        private int serverPos;
+        private IServerServices ss;
+        private bool FlagStop;
+
+        public delegate bool MyDelegate(Command c);
+
+
+        // The constructor obtains the state information.
+        public ThreadWithState(Command comm, int sPos)
+        {
+            c = comm;
+            serverPos = sPos;
+            ss = (IServerServices)Activator.GetObject(typeof(IServerServices), ClientProgram.AllServers[serverPos] + "MyRemoteObjectName");
+            FlagStop = false;
+        }
+
+        public void Kill_hread()
+        {
+            FlagStop = true;
+        }
+
+        // The thread procedure performs the task
+        public void TX_Command_thread()
+        {
+            Console.WriteLine("comecei ");
+            AsyncCallback cb = new AsyncCallback(MyCallBack);
+            MyDelegate d = new MyDelegate(ss.RX_Command);
+            while (!FlagStop)
+            {
+                Thread.Sleep(2000);//2 seconds
+                try
+                {
+                    Console.WriteLine("Trying to connect to: " + ClientProgram.AllServers[serverPos]);
+
+                    
+                    IAsyncResult ar = d.BeginInvoke(c, cb, null);
+                    
+                    Console.WriteLine("Connected to :" + ClientProgram.AllServers[serverPos]);
+
+                }
+                catch (System.Net.Sockets.SocketException e)
+                {
+                    //Keep
+                }
+                //Thread.Sleep(60000);//2 seconds
+               /* if (c.GetCommand().Equals("take") || c.GetCommand().Equals("remove"))
+                {
+                    //If the command is Take. Send only one
+                    Console.WriteLine("=======================================AQ");
+                    FlagStop = true;
+                }*/
+            }
+            
+            Console.WriteLine("Terminei de mandar para: " + ClientProgram.AllServers[serverPos]);
+        }
+
+        public static void MyCallBack(IAsyncResult ar)
+        {
+            MyDelegate d = (MyDelegate)((AsyncResult)ar).AsyncDelegate;
+            d.EndInvoke(ar);
+            //Console.WriteLine( "Ola" + );
+            
+        }
+    }
+
+
     class ClientProgram
     {
         private IServerServices ss;
         private ClientServices cs;
-        private string RootServer;
-        public List<string> AllServers;    //All servers present in the pool
+
+        private int ServerToConnect; //Server to connect
+        public static int SequenceNumber = 0; //Sequence number of the commands
+        public static List<SenderPool> ThreadsInAction;
+
+        public static ManualResetEvent Read_SignalEvent = new ManualResetEvent(false); //Pending thread can start
+        public static ManualResetEvent Add_SignalEvent = new ManualResetEvent(false); //Pending thread can start
+        public static ManualResetEvent Take_SignalEvent = new ManualResetEvent(false); //Pending thread can start
+
+        private static bool TerminateTakenActivity = false;
+
+        public static List<string> AllServers;    //All servers present in the pool
         private const string path = "..\\..\\..\\Filedatabase\\database.txt"; //database of all servers
         private const int Timeout = 5000; //miliseconds
 
@@ -33,7 +115,10 @@ namespace Projeto_DAD
 
         private const int STATE_COMMAND = 0;
         private const int STATE_WAIT_FOR_REPLY_READ = 1;
-        private int STATE_EXECUTE = STATE_COMMAND;
+        private const int STATE_WAIT_FOR_REPLY_ADD = 2;
+        private const int STATE_WAIT_FOR_REPLY_TAKE = 3;
+
+        private static int STATE_EXECUTE = STATE_COMMAND;
         private int TIMEOUT_FOR_READ = 5000; //5 s
 
         private bool START_CICLE = false;
@@ -43,8 +128,8 @@ namespace Projeto_DAD
         private string[] results;
         private MyTuple tuple = null;
 
-        private Uri MyAddress;
-        private static bool BlockUntilAnswer = false;
+        public static Uri MyAddress;
+     
 
         private string clientScript_path;
         private List<string> script_comands = new List<string>();
@@ -75,83 +160,134 @@ namespace Projeto_DAD
                     return;
                 }
             }
+
+            ThreadsInAction = new List<SenderPool>();
         }
 
 
-        public static void AnswerIsReceived()
+        
+
+        public static void FinnishTake()
         {
-            BlockUntilAnswer = true;
+            if(STATE_EXECUTE==STATE_WAIT_FOR_REPLY_TAKE)
+            {
+                TerminateTakenActivity = true;
+            }
         }
 
-        /// <summary>
+        //===============================================
+        //         Emulates the View
+        //===============================================
+        public static List<string> GetView()
+        {
+            return AllServers;
+        }
+        //Send commands to thread
+        public static void SendToView(Command c)
+        {
+            List<string> currentView = GetView();
+
+            for (int i = 0; i < currentView.Count; i++)
+            {
+                ThreadWithState tws = new ThreadWithState(c, i);
+                Thread td = new Thread(new ThreadStart(tws.TX_Command_thread));
+
+                ThreadsInAction.Add(new SenderPool(tws, td, new Uri(currentView[i]), c));
+                td.Start();
+            }
+        }
+        
+            
+            
+            /// <summary>
         /// Execute the command. Sends to Server
         /// </summary>
         /// <param name="command"></param>
         /// <param name="t"></param>
-        private void Execute(string command, MyTuple t)
+        public static void Execute(string command, MyTuple t)
         {
-            /*Console.WriteLine("EXECUTAR");
-            Command c;// = new Command(command, t, MyAddress);
+            Console.WriteLine("EXECUTAR");
+            Command c = new Command(command, t, MyAddress, ++SequenceNumber, null);
             Stopwatch sw = new Stopwatch();
-
-            while (true)
+               
+            switch (command)
             {
-                switch (STATE_EXECUTE)
-                {
-                    case STATE_COMMAND:
-                        switch (command)
-                        {
-                            case "read":
-                                for (int i = 0; i < Server.AllServers.Count; i++)
-                                {
-                                    
-                                }
-                                    //ss.RX_Command(c);
-                                STATE_EXECUTE = STATE_WAIT_FOR_REPLY_READ;
-                                break;
-                        }
-                        break;
-                    case STATE_WAIT_FOR_REPLY_READ:
-                        if(BlockUntilAnswer == true)
-                        {
-                            return; //Answer received
-
-                        }
-                        if (sw.ElapsedMilliseconds > TIMEOUT_FOR_READ)
-                        {
-                            STATE_EXECUTE = STATE_COMMAND; //No reply was received. send again
-                            break;
-                        }
-                        break;
-                }
-
-
-
-                try
-                {
-                    Command c = new Command(command, t, MyAddress);
-                    ss.RX_Command(c);
-                    while (BlockUntilAnswer == false) ;
-                    BlockUntilAnswer = false;
+                case "read":
+                    //Console.WriteLine("=======ENTREI NO READ=================================");
+                    ClientServices.SetCurrentCommandAndView(command, GetView());
+                    SendToView(c);
+                    Read_SignalEvent.WaitOne();
+                    Read_SignalEvent.Reset();
+                    //Console.WriteLine("=========SAI DO READ===============================");
                     break;
-                }
-                catch (System.Net.Sockets.SocketException e)
-                {
-                    Console.WriteLine("AQUI");
-                    Stopwatch sw = new Stopwatch();
-                    sw.Start();
-                    while (SearchForRootServer() == false) //Search for ROOT
+                case "add":
+                    //Console.WriteLine("========================================");
+                    ClientServices.SetCurrentCommandAndView(command, GetView());
+                    SendToView(c);
+                    Add_SignalEvent.WaitOne();
+                    Add_SignalEvent.Reset();
+                    break;
+                case "take":  //FASE 1
+                    Console.WriteLine("========================================");
+                    ClientServices.SetCurrentCommandAndView(command, GetView());
+                    SendToView(c);
+                    Take_SignalEvent.WaitOne();
+                    Take_SignalEvent.Reset();
+                    break;
+                /*case "remove":  //FASE 2
+                    Console.WriteLine("========================================");
+                    for (int i = 0; i < AllServers.Count; i++)
                     {
-                        if (sw.ElapsedMilliseconds > Timeout)
+                        ThreadWithState tws = new ThreadWithState(c, i);
+                        Thread td = new Thread(new ThreadStart(tws.TX_Command_thread));
+
+                        ThreadsInAction.Add(new SenderPool(tws, td, new Uri(AllServers[i]), c));
+                        td.Start();
+                    }
+                    Console.WriteLine("============SAIR DO REMOVW======================STATE_WAIT_FOR_REPLY_TAKE");
+                    STATE_EXECUTE = STATE_WAIT_FOR_REPLY_TAKE;*/
+                    break;
+
+            }
+                    //break;
+                /*case STATE_WAIT_FOR_REPLY_READ:
+                    Read_SignalEvent.WaitOne();
+                    Read_SignalEvent.Reset();
+                    STATE_EXECUTE = STATE_COMMAND;
+            break; ;
+                case STATE_WAIT_FOR_REPLY_ADD:
+
+                    Add_SignalEvent.WaitOne();
+                    Add_SignalEvent.Reset();
+
+                    STATE_EXECUTE = STATE_COMMAND;
+                    return;
+                case STATE_WAIT_FOR_REPLY_TAKE:
+                    Console.WriteLine("============INICIO======================STATE_WAIT_FOR_REPLY_TAKE");
+
+                    Take_SignalEvent.WaitOne();
+                    Take_SignalEvent.Reset();
+
+                    Console.WriteLine("============ENTREI======================STATE_WAIT_FOR_REPLY_TAKE: " + TerminateTakenActivity.ToString());
+                    STATE_EXECUTE = STATE_COMMAND;
+                    if (TerminateTakenActivity == true && command == "take")
+                    {
+                        //Console.WriteLine("============ACABEI======================STATE_WAIT_FOR_REPLY_TAKE");
+                        TerminateTakenActivity = false;
+                        command = "remove";
+                        c = new Command(command, t, MyAddress, ++SequenceNumber, null);
+                        //Take_SignalEvent.Set();
+                        //return;
+                    }
+                    else
+                    {
+                        if (TerminateTakenActivity == true && command == "remove")
                         {
-                            Console.WriteLine("No Server available.");
-                            Console.WriteLine("Retrying in {0} [s]", Timeout);
-                            Thread.Sleep(Timeout);
-                            //break;
+                            TerminateTakenActivity = false;
+                            return;
                         }
                     }
-                }
-            }*/
+                    break;*/
         }
         
 
@@ -174,7 +310,7 @@ namespace Projeto_DAD
                         }
                         break;
                     case STATE_READ_CLIENT_SCRIPT:          //Está martelado, fica assim, caso tenhamos tempo otimizo depois
-                        script_comands = ReadScriptFile(clientScript_path);
+                        /*script_comands = ReadScriptFile(clientScript_path);
                         foreach (string linha in script_comands)
                         {
                             results = linha.Split(' ');
@@ -236,7 +372,7 @@ namespace Projeto_DAD
                                         break;
                                 }
                             }
-                        }
+                        }*/
 
                         STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                         break;
@@ -272,7 +408,7 @@ namespace Projeto_DAD
                                 Execute("add", tuple);
                                 if (START_CICLE == true)
                                 {
-                                    CommandsInCycle.Add(new Command("add", tuple, null));
+                                    CommandsInCycle.Add(new Command("add", tuple, null, -1, null));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                                 break;
@@ -280,7 +416,7 @@ namespace Projeto_DAD
                                 Execute("read",tuple);
                                 if (START_CICLE == true)
                                 {
-                                    CommandsInCycle.Add(new Command("read", tuple, null));
+                                    CommandsInCycle.Add(new Command("read", tuple, null, -1, null));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                                 break;
@@ -288,7 +424,7 @@ namespace Projeto_DAD
                                 Execute("take",tuple);
                                 if (START_CICLE == true)
                                 {
-                                    CommandsInCycle.Add(new Command("take", tuple, null));
+                                    CommandsInCycle.Add(new Command("take", tuple, null, -1, null));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                                 break;
@@ -296,7 +432,7 @@ namespace Projeto_DAD
                                 Thread.Sleep(Int32.Parse(results[1]));
                                 if (START_CICLE == true)
                                 {
-                                    CommandsInCycle.Add(new Command("wait", results[1], null));
+                                    CommandsInCycle.Add(new Command("wait", results[1], null, -1, null));
                                 }
                                 STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
                                 break;
@@ -462,44 +598,37 @@ namespace Projeto_DAD
 
         private bool SearchForRootServer()
         {
-            /*int i = 0;
+            /*Random r = new Random();
+            ServerToConnect = r.Next(0, AllServers.Count); //connect to random server in pool
+
+            int i = 0;
             while (i < AllServers.Count)
             {
+                
                 try
                 {
-                    Console.WriteLine("Trying to connect to: " + AllServers[i]);
+                    Console.WriteLine("Trying to connect to: " + AllServers[ServerToConnect]);
                     ss = (IServerServices)Activator.GetObject(typeof(IServerServices), AllServers[i] + "MyRemoteObjectName");
-                    if (ss.isRoot() == true)
-                    {
-                        Console.WriteLine("Connected to :" + AllServers[i]);
-                        RootServer = AllServers[i];
+                    ss.Ping();
+                    Console.WriteLine("Connected to :" + AllServers[ServerToConnect]);
 
-                        Console.WriteLine(RootServer + " is the ROOT Server");
-                        RemotingServices.Marshal(cs, "MyRemoteObjectName", typeof(ClientServices));
-                        //new Thread(() => PingLoop()).Start();
-                        //STATE_CLIENT = STATE_CLIENT_COMMAND_INTERPRETATION;
-                        break;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Connected to :" + AllServers[i]);
-                        Console.WriteLine(AllServers[i] + "is NOT the ROOT Server");
-                    }
+                    RemotingServices.Marshal(cs, "MyRemoteObjectName", typeof(ClientServices));
+                    break;
+                    
 
                 }
                 catch (System.Net.Sockets.SocketException e)
                 {
-                    Console.WriteLine("The server: " + AllServers[i] + " is not available");
-                }
-
-                i = (i + 1) % AllServers.Count;
-                if (i == 0)
-                {
-                    return false;
+                    Console.WriteLine("The server: " + AllServers[ServerToConnect] + " is not available");
+                    i = (i + 1) % AllServers.Count;
+                    if (i == 0)
+                    {
+                        return false;
+                    }
+                    ServerToConnect = (ServerToConnect + 1) % AllServers.Count;
                 }
             }*/
             return true;
-
         }
 
 
