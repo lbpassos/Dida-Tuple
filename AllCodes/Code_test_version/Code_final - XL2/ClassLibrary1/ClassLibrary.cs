@@ -464,7 +464,7 @@ namespace Projeto_DAD
         }
     }
 
-
+    [Serializable]
     public class EachServer
     {
         public Uri uid;  //address

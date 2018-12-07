@@ -428,10 +428,11 @@ namespace Projeto_DAD
                         case "REQUEST_VIEW_AND_IMAGE":  //RECEBI UM PEDIDO
                             Console.WriteLine("-----REQUEST_VIEW_AND_IMAGE-----");
 
-                            Console.WriteLine("CURRENT VIEW ==> " + ServerProgram.GetCurrentViewID().ToString());
-                            Console.WriteLine("CURRENT IMAGE ==> " + ts.ToString());
-
+                            //Console.WriteLine("CURRENT VIEW1 ==> " + ServerProgram.GetCurrentViewID().ToString());
+                            //Console.WriteLine("CURRENT IMAGE ==> " + ts.ToString());
                             GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("RECEIVE_VIEW_AND_IMAGE", ServerProgram.GetCurrentViewID(), ts, ServerProgram.GetMyAddress(), ServerProgram.GetMyId()));  //ENVIO O ACK
+                            Console.WriteLine("olaaa");
+                            ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_UPDATE_VIEW);
 
                             break;
                         case "RECEIVE_VIEW_AND_IMAGE":  //RECEBI UM AKC
@@ -440,48 +441,48 @@ namespace Projeto_DAD
 
                             ServerProgram.SetCurrentViewID(cmd.GetProposedView()); //View update
                             ts = cmd.GetTSS();  //tuple space update
-                            Console.WriteLine("VIEW RECEBIDA ==> " + cmd.GetProposedView().ToString());
-                            Console.WriteLine("IMAGEM RECEBIDA ==> " + ts.ToString());
+                            Console.WriteLine("VIEW RECEBIDA1 ==> " + cmd.GetProposedView().ToString());
+                            Console.WriteLine("IMAGEM RECEBIDA1 ==> " + ts.ToString());
+                            ServerProgram.wait = false;
                             ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_RESTART);
 
                             break;
                         case "REQUEST_VIEW":
                             Console.WriteLine("-----REQUEST_VIEW-----");       //RECEBI UM PEDIDO
 
-                            Console.WriteLine("CURRENT VIEW ==> " + ServerProgram.GetCurrentViewID().ToString());
+                            //Console.WriteLine("CURRENT VIEW2 ==> " + ServerProgram.GetCurrentViewID().ToString());
 
                             GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("RECEIVE_VIEW", ServerProgram.GetCurrentViewID(), null, ServerProgram.GetMyAddress(), ServerProgram.GetMyId()));  //ENVIO O ACK
-
+                            ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_WAIT);
                             break;
                         case "RECEIVE_VIEW":    //RECEBI UM AKC
 
                             Console.WriteLine("-----RECEIVE_VIEW-----");
 
-                            if(cmd.GetURI().AbsolutePath == ServerProgram.RootServer.UID.AbsolutePath)
+                            if (cmd.GetURI().AbsolutePath == ServerProgram.RootServer.UID.AbsolutePath)
                             {
                                 ServerProgram.root_view = cmd.GetProposedView();
-                                Console.WriteLine("Recebi a view do root ---> " + ServerProgram.root_view.ToString());
+                                //Console.WriteLine("Recebi a view do root ---> " + ServerProgram.root_view.ToString());
                             }
                             ServerProgram.Proposed_Views.Add(cmd.GetProposedView());
-                            Console.WriteLine("VIEW RECEBIDA ==> " + cmd.GetProposedView().ToString());
+                            //Console.WriteLine("VIEW RECEBIDA2 ==> " + cmd.GetProposedView().ToString());
+                            ServerProgram.wait = false;
                             ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_CHECK_VIEW);
                             break;
 
                         case "UPDATE_VIEW":     //RECEBI UM PEDIDO DO ROOT PARA FAZER UPDATE DA VIEW
-                            Console.WriteLine("-----UPDATE_VIEW-----");       
+                            Console.WriteLine("-----UPDATE_VIEW-----");
 
                             ServerProgram.SetCurrentViewID(cmd.GetProposedView()); //View update
-                            Console.WriteLine("NOVA VIEW ==> " + ServerProgram.GetCurrentViewID().ToString());
+                            //Console.WriteLine("NOVA VIEW ==> " + ServerProgram.GetCurrentViewID().ToString());
 
                             GiveBackResultToReplica(cmd.GetURI(), new CommandReplicas("ACK_UPDATE_VIEW", ServerProgram.GetCurrentViewID(), null, ServerProgram.GetMyAddress(), ServerProgram.GetMyId()));  //ENVIO O ACK
-
+                            ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_WAIT);
                             break;
 
                         case "ACK_UPDATE_VIEW":
                             Console.WriteLine("-----ACK_UPDATE_VIEW-----");       //RECEBI ACK DE CONFIRMAÇÃO DA ALTERAÇÃO DA VIEW
-
-                            Console.WriteLine("O SERVER " + cmd.GetURI().AbsolutePath + " confirmou a mudança de view");
-
+                            ServerProgram.wait = false;
                             ServerProgram.SetStateMachine(ServerProgram.STATE_MACHINE_NETWORK_RESTART);
 
                             break;
