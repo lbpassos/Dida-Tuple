@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Projeto_DAD
+namespace TestHash
 {
     class Lock
     {
@@ -24,7 +24,6 @@ namespace Projeto_DAD
 
         public bool IsIn(MyTuple mt) //check if tuple is in lock
         {
-            Console.WriteLine("==========================================TUPLO " + TuplesLocked.Contains(mt));
             return TuplesLocked.Contains(mt);
         }
 
@@ -54,3 +53,4 @@ namespace Projeto_DAD
         }
     }
 }
+

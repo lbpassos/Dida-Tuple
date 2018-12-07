@@ -40,6 +40,7 @@ namespace Projeto_DAD
             CommandInUse = c;
             currentView = current;
             ServersInTheView.Clear();
+            AcceptedReply.Clear();
         }
 
         public void sink(Command mt) //Receive answers
@@ -113,7 +114,7 @@ namespace Projeto_DAD
                                                     {
                                                         for (int k = 0; k < ServersInTheView.Count; ++k)
                                                         {
-                                                            if (ClientProgram.ThreadsInAction[j].GetUri().Equals(ServersInTheView[k])){
+                                                            if (ClientProgram.ThreadsInAction[j].GetUri().Equals(ServersInTheView[k])) {
                                                                 ClientProgram.ThreadsInAction[j].GetThreadState().Kill_hread();
                                                                 ClientProgram.ThreadsInAction[j].GetThread().Join();
                                                                 ClientProgram.ThreadsInAction.RemoveAt(j);
@@ -143,34 +144,69 @@ namespace Projeto_DAD
                                                 if (ServersInTheView.Contains(mt.GetUriFromSender()) == false)
                                                 {
                                                     ServersInTheView.Add(mt.GetUriFromSender());
+                                                    AcceptedReply.Add(mt); //Accepted stored
 
                                                     if (ServersInTheView.Count == currentView.Count)
                                                     {
                                                         //Can progress
-                                                        for (int j = 0; j < ClientProgram.ThreadsInAction.Count; ++j)
-                                                        {
-                                                            for (int k = 0; k < ServersInTheView.Count; ++k)
-                                                            {
-                                                                if (ClientProgram.ThreadsInAction[j].GetUri().Equals(ServersInTheView[k]))
-                                                                {
-                                                                    ClientProgram.ThreadsInAction[j].GetThreadState().Kill_hread();
-                                                                    ClientProgram.ThreadsInAction[j].GetThread().Join();
-                                                                    ClientProgram.ThreadsInAction.RemoveAt(j);
-                                                                    j = -1;
-                                                                    break;
-                                                                }
-                                                            }
 
+                                                        //Check intersection of the tuple space
+                                                        HashSet<MyTuple> Intersection = (HashSet<MyTuple>)AcceptedReply[0].GetPayload();
+                                                        for (int j = 1; j < AcceptedReply.Count; ++j)
+                                                        {
+                                                            HashSet<MyTuple> mySet2 = (HashSet<MyTuple>)AcceptedReply[i].GetPayload();
+                                                            Intersection.Intersect(mySet2);
                                                         }
+                                                        //Test if null
+                                                        if (Intersection.Count == 0)
+                                                        {
+                                                            //Restart FAse 1
+                                                            ServersInTheView.Clear();
+                                                            AcceptedReply.Clear();
+                                                            break;
+                                                            //ClientProgram.Take_SignalEvent.Set();
+                                                        }
+                                                        else
+                                                        {
+                                                            foreach (MyTuple t in Intersection)
+                                                            {
+                                                                //Console.WriteLine("(ClientServices) TAKE Success: " + i.ToString());
+                                                                //ClientProgram.FinnishTake();
+                                                                //ClientProgram.Take_SignalEvent.Set();
+
+                                                                //Vou ter que mandar REMOVE
+
+                                                                //Limpar tudo
+                                                                for (int j = 0; j < ClientProgram.ThreadsInAction.Count; ++j)
+                                                                {
+                                                                    for (int k = 0; k < ServersInTheView.Count; ++k)
+                                                                    {
+                                                                        if (ClientProgram.ThreadsInAction[j].GetUri().Equals(ServersInTheView[k]))
+                                                                        {
+                                                                            ClientProgram.ThreadsInAction[j].GetThreadState().Kill_hread();
+                                                                            ClientProgram.ThreadsInAction[j].GetThread().Join();
+                                                                            ClientProgram.ThreadsInAction.RemoveAt(j);
+                                                                            j = -1;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                //===================================================== Preparar REMOVE
+                                                                ClientProgram.SendToView(new Command("remove", t, ClientProgram.MyAddress, ClientProgram.SequenceNumber, null));
+                                                                SetCurrentCommandAndView("remove", ClientProgram.GetView());
+                                                                //Console.WriteLine("Depois do Remove");
+                                                                break;
+                                                            }
+                                                        }
+
+
+
+
 
                                                         //ClientProgram.SendToView(new Command("remove", t, MyAddress, ++SequenceNumber, null));
 
-                                                        ClientProgram.Take_SignalEvent.Set(); //Signal UpperLayer that it can evolve
-
-
-
-
-
+                                                        //ClientProgram.Take_SignalEvent.Set(); //Signal UpperLayer that it can evolve
 
                                                         Console.WriteLine("(ClientServices) ADD Success in the majority of replicas: ");
                                                     }
@@ -179,6 +215,45 @@ namespace Projeto_DAD
                                             }
                                         }
 
+                                    }
+                                    else
+                                    {
+                                        if (CommandInUse == "remove" && mt.GetPrevCommand() == "remove") //===================================================
+                                        {
+                                            for (int i = 0; i < ClientProgram.ThreadsInAction.Count; ++i)
+                                            {
+                                                if (ClientProgram.ThreadsInAction[i].Equals(new SenderPool(null, null, mt.GetUriFromSender(), mt)) == true) //Se está OK
+                                                {
+
+                                                    if (ServersInTheView.Contains(mt.GetUriFromSender()) == false)
+                                                    {
+                                                        ServersInTheView.Add(mt.GetUriFromSender());
+
+                                                        if (ServersInTheView.Count == currentView.Count)
+                                                        {
+                                                            //Can progress
+                                                            //Limpar tudo
+                                                            for (int j = 0; j < ClientProgram.ThreadsInAction.Count; ++j)
+                                                            {
+                                                                for (int k = 0; k < ServersInTheView.Count; ++k)
+                                                                {
+                                                                    if (ClientProgram.ThreadsInAction[j].GetUri().Equals(ServersInTheView[k]))
+                                                                    {
+                                                                        ClientProgram.ThreadsInAction[j].GetThreadState().Kill_hread();
+                                                                        ClientProgram.ThreadsInAction[j].GetThread().Join();
+                                                                        ClientProgram.ThreadsInAction.RemoveAt(j);
+                                                                        j = -1;
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+                                                            ClientProgram.Take_SignalEvent.Set();
+
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -192,89 +267,16 @@ namespace Projeto_DAD
                                 if (CommandInUse == "refuse" && mt.GetPrevCommand() == "take")
                                 {
                                 }
-                            }
-                            break;
-                        
-                        /*case "refuse":
-                            NumOfRefusedReceived = 0;
-                            NumOfAcceptedReceived = 0;
-                            ClientProgram.Take_SignalEvent.Set();*/
-
-                            /*if (NumOfRefusedReceived == 0)
-                            {
-                                //At least One refused. Start al over again
-                                ++NumOfRefusedReceived;
-                                
-                                ClientProgram.Take_SignalEvent.Set();
-                            }
-                            else
-                            {
-                                ++NumOfRefusedReceived;
-                                if ((NumOfRefusedReceived + NumOfAcceptedReceived) == ClientProgram.AllServers.Count)
-                                {
-                                    NumOfRefusedReceived = 0;
-                                    NumOfAcceptedReceived = 0;
-                                }
-                            }*/
-                            //break;
-                        case "accept":
-                            ++NumOfAcceptedReceived;
-                            AcceptedReply.Add(mt);
-                            if ( NumOfAcceptedReceived== ClientProgram.AllServers.Count)
-                            {
-                                //All accpeted
-                                NumOfAcceptedReceived = 0;
-
-
-                                HashSet<MyTuple> Intersection = (HashSet<MyTuple>)AcceptedReply[0].GetPayload();
-                                for (int i=1; i< AcceptedReply.Count; ++i)
-                                {
-
-                                    HashSet<MyTuple> mySet2 = (HashSet<MyTuple>)AcceptedReply[i].GetPayload();
-                                    Intersection.Intersect(mySet2);
-                                }
-
-                                //Test if null
-                                if (Intersection.Count == 0)
-                                {
-                                    //Restart FAse 1
-                                    ClientProgram.Take_SignalEvent.Set();
-                                }
                                 else
                                 {
-                                    foreach (MyTuple i in Intersection)
+                                    if (CommandInUse == "remove" && mt.GetPrevCommand() == "remove")
                                     {
-                                        //Console.WriteLine("(ClientServices) TAKE Success: " + i.ToString());
-                                        ClientProgram.FinnishTake();
-                                        ClientProgram.Take_SignalEvent.Set();
 
-                                        
-
-                                        //Console.WriteLine("Antes do Remove");
-                                        
-
-                                        
-
-                                        //Console.WriteLine("Depois do Remove");
-                                        break;
                                     }
-                                }                               
+                                }
                             }
                             break;
-                        /*case "ack": //FASE 2
-                            ++NumOfAckReceived;
-                            if(NumOfAckReceived == ClientProgram.AllServers.Count)
-                            {
-                                //All received. Finnish
-                                NumOfAckReceived = 0;
-                                Console.WriteLine("(ClientServices) TAKE Success in all");
-                                ClientProgram.FinnishTake();
-                                ClientProgram.Take_SignalEvent.Set();
-
-                            }
-                            //ClientProgram.Pending_SignalEvent.Set();
-                            break;*/
-                    }
+                    }    
                 }
             }
         }

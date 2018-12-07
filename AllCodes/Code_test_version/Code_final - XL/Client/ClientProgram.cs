@@ -64,11 +64,12 @@ namespace Projeto_DAD
                     //Keep
                 }
                 //Thread.Sleep(60000);//2 seconds
-                if (c.GetCommand().Equals("take") || c.GetCommand().Equals("remove"))
+               /* if (c.GetCommand().Equals("take") || c.GetCommand().Equals("remove"))
                 {
                     //If the command is Take. Send only one
+                    Console.WriteLine("=======================================AQ");
                     FlagStop = true;
-                }
+                }*/
             }
             
             Console.WriteLine("Terminei de mandar para: " + ClientProgram.AllServers[serverPos]);
@@ -233,7 +234,7 @@ namespace Projeto_DAD
                     Take_SignalEvent.WaitOne();
                     Take_SignalEvent.Reset();
                     break;
-                case "remove":  //FASE 2
+                /*case "remove":  //FASE 2
                     Console.WriteLine("========================================");
                     for (int i = 0; i < AllServers.Count; i++)
                     {
@@ -244,7 +245,7 @@ namespace Projeto_DAD
                         td.Start();
                     }
                     Console.WriteLine("============SAIR DO REMOVW======================STATE_WAIT_FOR_REPLY_TAKE");
-                    STATE_EXECUTE = STATE_WAIT_FOR_REPLY_TAKE;
+                    STATE_EXECUTE = STATE_WAIT_FOR_REPLY_TAKE;*/
                     break;
 
             }
