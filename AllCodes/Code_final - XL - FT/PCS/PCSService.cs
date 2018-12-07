@@ -15,7 +15,7 @@ namespace Projeto_DAD
 
         public const string serverPath = "..\\..\\..\\Server\\bin\\Debug\\Server.exe";
         public const string clientPath = "..\\..\\..\\Client\\bin\\Debug\\Client.exe";
-
+        //teste
 
         public void StartServer(string id, string url, string min_delay, string max_delay)
         {
