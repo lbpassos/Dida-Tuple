@@ -374,7 +374,12 @@ namespace Projeto_DAD
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            int res = 0;
+            for (int i=0; i< ObjTuple.Count; ++i)
+            {
+                res += ObjTuple[i].GetHashCode();
+            }
+            return res;
         }
 
         public override string ToString()

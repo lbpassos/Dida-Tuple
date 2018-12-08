@@ -137,19 +137,21 @@ namespace Projeto_DAD
                             ///                            
                             break;
                         case "take":
-                            if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
-                            {
-                                //First time received
+                            
+                            /*
+                             if (CommandsAlreadyReceived.Contains(cmd) == false) //Test If command is received by the first time
+                             {
+                                //First time received;
                                 for (int i = 0; i < CommandsAlreadyReceived.Count; ++i)
                                 {
                                     if (CommandsAlreadyReceived[i].GetUriFromSender().Equals(cmd.GetUriFromSender()) == true) //Remove the last command sent by the client
                                     {
-                                        CommandsAlreadyReceived.RemoveAt(i);
-                                        break;
+                                       CommandsAlreadyReceived.RemoveAt(i);
+                                       break;
                                     }
                                 }
                                 CommandsAlreadyReceived.Add(cmd); //add
-
+                              */  
 
                                 //========================================================
                                 //============================= PHASE 1
@@ -233,7 +235,7 @@ namespace Projeto_DAD
                                             }
                                         }
                                     }
-                                }
+                                //}
                                
 
                                 

@@ -208,7 +208,7 @@ namespace Projeto_DAD
 
                                                         //ClientProgram.Take_SignalEvent.Set(); //Signal UpperLayer that it can evolve
 
-                                                        Console.WriteLine("(ClientServices) ADD Success in the majority of replicas: ");
+                                                        Console.WriteLine("(ClientServices) TAKE Success in all the replicas: ");
                                                     }
                                                 }
                                                 break;
@@ -264,12 +264,13 @@ namespace Projeto_DAD
                             }
                             else
                             {
-                                if (CommandInUse == "refuse" && mt.GetPrevCommand() == "take")
+                                if (CommandInUse == "take" && mt.GetPrevCommand() == "refuse")
                                 {
+                                    Thread.Sleep(250);
                                 }
                                 else
                                 {
-                                    if (CommandInUse == "remove" && mt.GetPrevCommand() == "remove")
+                                    if (CommandInUse == "remove" && mt.GetPrevCommand() == "refuse")
                                     {
 
                                     }
