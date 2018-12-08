@@ -25,9 +25,12 @@ namespace Projeto_DAD
         public const int STATE_MACHINE_NETWORK_REQUEST_VIEW = 1;
         public const int STATE_MACHINE_NETWORK_CHECK_VIEW = 2;
         public const int STATE_MACHINE_NETWORK_CHANGE_VIEW= 3;
-        public const int STATE_MACHINE_NETWORK_UPDATE_ROOT = 4;
-        public const int STATE_MACHINE_NETWORK_WAIT = 5;
-        public const int STATE_MACHINE_NETWORK_RESTART = 6;
+        public const int STATE_MACHINE_NETWORK_UPDATE_VIEW = 4;
+        public const int STATE_MACHINE_NETWORK_UPDATE_ROOT = 5;
+        public const int STATE_MACHINE_NETWORK_WAIT = 6;
+        public const int STATE_MACHINE_NETWORK_RESTART = 7;
+        public const int STATE_MACHINE_NETWORK_RESTART2 = 8;
+        public const int STATE_MACHINE_NETWORK_RESTART3 = 9;
 
         private static IServerServices ss;
         private static List<EachServer> serversAlive = new List<EachServer>();
@@ -36,6 +39,9 @@ namespace Projeto_DAD
         public static List<View> Proposed_Views = new List<View>();
         private static bool getFromRoot = false;
         public static int view_sequence = 0;
+        private static bool Im_Root = false;
+
+        public static bool wait = true;
 
         private static View CurrentViewID;
 
@@ -126,28 +132,61 @@ namespace Projeto_DAD
                             sequence: 0,
                             servers_in_View: serversAlive
                         );
+                        Im_Root = true;
                         RootServer = new EachServer(MyAddress, MyID);
+                        Console.WriteLine("IM ROOT");
                     }
-
+                    STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_RESTART;
 
                     break;
 
                 case STATE_MACHINE_NETWORK_REQUEST_VIEW:
-                    if(first_request == true)
+                    if (first_request == true && Im_Root == false)
                     {
+                        ss = (IServerServices)Activator.GetObject(typeof(IServerServices), RootServer.uid.ToString() + "MyRemoteObjectName");
                         ss.RX_ReplicaCommand(new CommandReplicas("REQUEST_VIEW_AND_IMAGE", null, null, MyAddress, MyID));
                         first_request = false;
                         STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_WAIT;
                     }
                     else
                     {
-                        foreach(EachServer server_alive in CurrentViewID.Servers_in_View)
+                        try
                         {
-                            if(server_alive.id != MyID )
-                                ss.RX_ReplicaCommand(new CommandReplicas("REQUEST_VIEW", null, null, MyAddress, MyID));
+                            Console.WriteLine(MyID + "ooooooooooooooooooooooooooooo" + CurrentViewID.Servers_in_View.Count);
+                            foreach (EachServer server_alive in CurrentViewID.Servers_in_View)
+                            {
+                                //if (server_alive.id != MyID)
+                                //{
+                                    ss = (IServerServices)Activator.GetObject(typeof(IServerServices), server_alive.uid.ToString() + "MyRemoteObjectName");
+                                    ss.RX_ReplicaCommand(new CommandReplicas("REQUEST_VIEW", null, null, MyAddress, MyID));
+                                //}
+                            }
+                            STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_WAIT;
                         }
-                        STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_WAIT;
+                        catch
+                        {
+                            if (Im_Root == true)
+                            {
+                                Ping_All_Servers();
+                                foreach (EachServer server_alive in serversAlive)
+                                {
+                                    if (server_alive.id != MyID)
+                                    {
+                                        view_sequence++;
+                                        View tmp = new View(MyID, view_sequence, serversAlive);
+                                        ss = (IServerServices)Activator.GetObject(typeof(IServerServices), server_alive.uid.ToString() + "MyRemoteObjectName");
+                                        ss.RX_ReplicaCommand(new CommandReplicas("UPDATE_VIEW", tmp, null, MyAddress, MyID));
+                                    }
+                                }
+                            }
+                            else
+                            {
+
+                            }
+                        }
                     }
+                    //Console.WriteLine("adeus");
+                    STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_RESTART2;
                     break;
 
                 case STATE_MACHINE_NETWORK_CHECK_VIEW:
@@ -173,21 +212,41 @@ namespace Projeto_DAD
                     else
                         STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_UPDATE_ROOT;
                     break;
-
+                case STATE_MACHINE_NETWORK_UPDATE_VIEW:
+                    Console.WriteLine("Entrei no update view");
+                    Ping_All_Servers();
+                    view_sequence++;
+                    View new_view = new View(MyID, view_sequence, serversAlive);
+                    root_view = new_view;
+                    SetCurrentViewID(new_view);
+                    Console.WriteLine("UPDATE VIEW______=> " + new_view.ToString());
+                    foreach (EachServer server_alive in serversAlive)
+                    {
+                        if (server_alive.id != MyID)
+                        {
+                            ss = (IServerServices)Activator.GetObject(typeof(IServerServices), server_alive.uid.ToString() + "MyRemoteObjectName");
+                            ss.RX_ReplicaCommand(new CommandReplicas("UPDATE_VIEW", new_view, null, MyAddress, MyID));
+                        }
+                    }
+                    STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_WAIT;
+                    break;
                 case STATE_MACHINE_NETWORK_UPDATE_ROOT:
                     if (serversAlive.Count == 0 || ((Server.My_Identification.ID - 1) < serversAlive[0].id)) //check if anyone is ROOT
                     {
                         //IM ROOT
                         RootServer = new EachServer(MyAddress, MyID);
                         Ping_All_Servers();
-                        View new_view = new View(MyID, view_sequence++,serversAlive);
-                        root_view = new_view;
-                        SetCurrentViewID(new_view);
-                        Console.WriteLine("IM THE NEW ROOT-----VIEW => " + new_view.ToString());
+                        View new_view2 = new View(MyID, view_sequence++,serversAlive);
+                        root_view = new_view2;
+                        SetCurrentViewID(new_view2);
+                        Console.WriteLine("IM THE NEW ROOT-----VIEW => " + new_view2.ToString());
                         foreach(EachServer server_alive in serversAlive)
                         {
                             if (server_alive.id != MyID)
-                                ss.RX_ReplicaCommand(new CommandReplicas("UPDATE_VIEW", new_view , null, MyAddress, MyID));
+                            {
+                                ss = (IServerServices)Activator.GetObject(typeof(IServerServices), server_alive.uid.ToString() + "MyRemoteObjectName");
+                                ss.RX_ReplicaCommand(new CommandReplicas("UPDATE_VIEW", new_view2 , null, MyAddress, MyID));
+                            }
                         }
                     }
                     //else
@@ -213,12 +272,21 @@ namespace Projeto_DAD
 
                     break;
                 case STATE_MACHINE_NETWORK_WAIT:
-                    while (STATE_MACHINE_NETWORK != STATE_MACHINE_NETWORK_CHECK_VIEW || STATE_MACHINE_NETWORK != STATE_MACHINE_NETWORK_RESTART)Thread.Sleep(50) ;
+                    while (wait == true) Thread.Sleep(50);
+                    wait = true;
+                    STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_RESTART;
                     break;
 
                 case STATE_MACHINE_NETWORK_RESTART:
                     Thread.Sleep(3000);
                     STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_REQUEST_VIEW;
+                    break;
+                case STATE_MACHINE_NETWORK_RESTART2:
+                    Thread.Sleep(3000);
+                    break;
+                case STATE_MACHINE_NETWORK_RESTART3:
+                    Thread.Sleep(5000);
+                    STATE_MACHINE_NETWORK = STATE_MACHINE_NETWORK_UPDATE_ROOT;
                     break;
             }
         }
@@ -226,18 +294,23 @@ namespace Projeto_DAD
         
         public static void Ping_All_Servers()
         {
+            serversAlive.Clear();
             foreach(EachServer s in AllServers)
             {
-                ss = (IServerServices)Activator.GetObject(typeof(IServerServices), s.uid.ToString() + "MyRemoteObjectName");
-                try
+                if (s.id != MyID)
                 {
-                    ss.Ping();
-                    serversAlive.Add(s);
-                    Console.WriteLine("The server {0} is alive", s.uid.ToString());
-                }
-                catch
-                {
-                    Console.WriteLine("The server {0} is dead", s.uid.ToString());      
+                    IServerServices sd = (IServerServices)Activator.GetObject(typeof(IServerServices), s.uid.ToString() + "MyRemoteObjectName");
+                    try
+                    {
+                        sd.Ping();
+                        if (!serversAlive.Contains(s))
+                            serversAlive.Add(s);
+                        Console.WriteLine("The server {0} is alive", s.uid.ToString());
+                    }
+                    catch
+                    {
+                        Console.WriteLine("The server {0} is dead", s.uid.ToString());
+                    }
                 }
             }
 
