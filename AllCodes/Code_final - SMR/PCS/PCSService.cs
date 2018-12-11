@@ -5,6 +5,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.Remoting.Channels.Tcp;
+using System.Runtime.Remoting.Channels;
+using System.Collections;
 
 namespace Projeto_DAD
 {
@@ -15,6 +18,17 @@ namespace Projeto_DAD
 
         public const string serverPath = "..\\..\\..\\Server\\bin\\Debug\\Server.exe";
         public const string clientPath = "..\\..\\..\\Client\\bin\\Debug\\Client.exe";
+
+       
+        TcpClientChannel channel = new TcpClientChannel();
+              
+
+        public PCSService()
+        {
+           
+            ChannelServices.RegisterChannel(channel,false);
+        }
+
 
 
         public void StartServer(string id, string url, string min_delay, string max_delay)
@@ -205,9 +219,10 @@ namespace Projeto_DAD
         public void Freeze(string processname)
         {
             Uri uri = FindProcessAddress(processname, processname[0]); //Get address of the process
-
+            //Uri uri = new Uri("tcp://localhost:1200");
             if (processname[0] == 's')
             {
+                
                 IServerServices obj = (IServerServices)Activator.GetObject(typeof(IServerServices), uri.AbsoluteUri + "MyRemoteObjectName"); //Send msg to Server to freeze
                 obj.freeze();
             }
@@ -237,7 +252,7 @@ namespace Projeto_DAD
             {
                 foreach (KeyValuePair<ProcessSupport, Process> kvp in ServerProcess)
                 {
-                    if( kvp.Key.Equals(id)==true )
+                    if ( kvp.Key.GetProcessname().Equals(id)==true ) //Get the Name of the process
                     {
                         return kvp.Key.GetUri();
                     }
@@ -247,7 +262,7 @@ namespace Projeto_DAD
             {
                 foreach (KeyValuePair<ProcessSupport, Process> kvp in ClientProcess)
                 {
-                    if (kvp.Key.Equals(id) == true)
+                    if (kvp.Key.GetProcessname().Equals(id) == true)
                     {
                         return kvp.Key.GetUri();
                     }
@@ -309,5 +324,16 @@ namespace Projeto_DAD
         {
             return Processname.GetHashCode();
         }
+
+        /*public static void teste()
+        {
+
+            Uri uri = new Uri("tcp://localhost:1200");
+            IServerServices obj = (IServerServices)Activator.GetObject(typeof(IServerServices), uri.AbsoluteUri + "MyRemoteObjectName"); //Send msg to Server to freeze
+            obj.freeze();
+            while (true) ;
+        }*/
     }
+
+    
 }

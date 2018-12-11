@@ -185,6 +185,7 @@ namespace Projeto_DAD
         public void freeze()
         {
             MustFreeze = true;
+            Console.WriteLine("I'm FREEZE==========================");
         }
 
         public void unfreeze()
