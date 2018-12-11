@@ -168,7 +168,15 @@ namespace Projeto_DAD
 
                     string client_id = words[1];
                     string url_client = words[2];
-                    string scriptFile = words[3];
+                    string scriptFile;
+                    try
+                    {
+                        scriptFile = words[3];
+                    }
+                    catch
+                    {
+                        scriptFile = null;
+                    }
                    
                     if (words.Length == 4)
                     {

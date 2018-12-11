@@ -88,8 +88,6 @@ namespace Projeto_DAD
                 while (MustFreeze == true) ; //FREEZE ****************************
                 Thread.Sleep(50);//Min time to check commands
 
-
-                Console.WriteLine("Comandos + ==============" + commLayer.GetQueueSize());
                 if (commLayer.GetQueueSize() > 0) //if there is commands
                 {
                     Command cmd = commLayer.RemoveFromCommandQueue();
