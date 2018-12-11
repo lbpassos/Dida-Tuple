@@ -22,17 +22,39 @@ namespace Projeto_DAD
         static void Main(string[] args)
         {
 
-            TcpChannel channel = new TcpChannel(port);
-            ChannelServices.RegisterChannel(channel, true);    
- 
+            IDictionary RemoteChannelProperties = new Hashtable();
+            RemoteChannelProperties["port"] = port.ToString();
+            RemoteChannelProperties["name"] = "tcp1";
+
+            TcpServerChannel channel = new TcpServerChannel(RemoteChannelProperties, null, null);//
+            ChannelServices.RegisterChannel(channel, true);
+
+            RemotingConfiguration.RegisterWellKnownServiceType(
+                typeof(PCSService),
+                "MyRemoteObjectName",
+                WellKnownObjectMode.Singleton);
+                
+            //new Thread(() => Client_thread()).Start();
+            //new Thread(() => Service_thread()).Start();
+
+            System.Console.WriteLine("<enter> para sair...");
+            System.Console.ReadLine();
+        }
+
+
+        public static void Service_thread()
+        {
+
             RemotingConfiguration.RegisterWellKnownServiceType(
                 typeof(PCSService),
                 "MyRemoteObjectName",
                 WellKnownObjectMode.Singleton);
 
-            System.Console.WriteLine("<enter> para sair...");
-            System.Console.ReadLine();
+            //while (true) ;
+            Thread.Sleep(Timeout.Infinite);
         }
+
+       
     }
     
     

@@ -47,6 +47,7 @@
     <Compile Include="PCS.cs" />
     <Compile Include="PCSService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteChannelProperties.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

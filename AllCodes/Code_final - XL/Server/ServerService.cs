@@ -404,8 +404,17 @@ namespace Projeto_DAD
         public Object[] getImage() { return null; } //Request on Init
         public void TakeCommand(Command cmd) { }//Get Commands from ROOT
 
-        public void freeze() { }
-        public void unfreeze() { }
+        public void freeze()
+        {
+            MustFreeze = true;
+            Console.WriteLine("I'm FREEZE==========================");
+        }
+
+        public void unfreeze()
+        {
+            MustFreeze = false;
+            Console.WriteLine("I'm ==============UNFREEZE============");
+        }
 
 
 
