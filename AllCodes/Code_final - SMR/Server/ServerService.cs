@@ -80,10 +80,16 @@ namespace Projeto_DAD
 
         public static void CheckCommandsInQueue_thread()
         {
-            while(true) 
+            
+            while (true) 
             {
+
+                
                 while (MustFreeze == true) ; //FREEZE ****************************
                 Thread.Sleep(50);//Min time to check commands
+
+
+                Console.WriteLine("Comandos + ==============" + commLayer.GetQueueSize());
                 if (commLayer.GetQueueSize() > 0) //if there is commands
                 {
                     Command cmd = commLayer.RemoveFromCommandQueue();
@@ -113,6 +119,7 @@ namespace Projeto_DAD
                             break;
                         case "add":
                             ts.Add(payload);
+                            //Console.WriteLine(" ================= UMA VEZ ================ ");
 
                             Console.WriteLine("Imagem: ");
                             Console.WriteLine(ServerService.GetTupleSpaceRepresentation());
@@ -191,6 +198,7 @@ namespace Projeto_DAD
         public void unfreeze()
         {
             MustFreeze = false;
+            Console.WriteLine("I'm ==============UNFREEZE============");
         }
 
         public static void SetDelayMessageTime(int delay_ms)

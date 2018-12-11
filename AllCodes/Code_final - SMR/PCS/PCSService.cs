@@ -20,13 +20,13 @@ namespace Projeto_DAD
         public const string clientPath = "..\\..\\..\\Client\\bin\\Debug\\Client.exe";
 
        
-        TcpClientChannel channel = new TcpClientChannel();
+        TcpClientChannel channelClient = new TcpClientChannel();
               
 
         public PCSService()
         {
-           
-            ChannelServices.RegisterChannel(channel,false);
+
+            ChannelServices.RegisterChannel(channelClient,false);
         }
 
 

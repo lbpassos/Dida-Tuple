@@ -160,7 +160,7 @@ namespace Projeto_DAD
                         }
                         catch(Exception e)
                         {
-                            Console.WriteLine("PCS is DOWN");
+                            Console.WriteLine("PCS is DOWN " + e);
                         }
                     }                       
                     break;
