@@ -1,1 +1,0 @@
-Server s1 tcp://localhost:1201 1 2

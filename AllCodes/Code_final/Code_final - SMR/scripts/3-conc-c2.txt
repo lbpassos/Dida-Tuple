@@ -1,0 +1,5 @@
+wait 5000
+begin-repeat 300
+add <"2">
+take <"1">
+wait 50

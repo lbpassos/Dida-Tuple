@@ -1,0 +1,3 @@
+begin-repeat 300
+add <"1">
+take <"2">
